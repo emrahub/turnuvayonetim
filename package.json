@@ -1,0 +1,72 @@
+{
+  "name": "turnuvayonetim",
+  "version": "1.0.0",
+  "description": "Advanced Poker Tournament Management System with Agent Orchestration",
+  "private": true,
+  "packageManager": "npm@10.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "setup:agents": "node scripts/setup-agents.js",
+    "agents:start": "node scripts/start-agents.js",
+    "agents:status": "node scripts/agent-status.js",
+    "orchestrate": "node apps/cli/dist/index.js",
+    "orchestrate:build": "npm run orchestrate -- build --full",
+    "orchestrate:mvp": "npm run orchestrate -- build --mvp",
+    "orchestrate:interactive": "npm run orchestrate -- interactive",
+    "type-check": "turbo run type-check",
+    "db:setup": "docker-compose up -d postgres redis",
+    "db:generate": "cd packages/db && npm run db:generate",
+    "db:migrate": "cd packages/db && npm run db:migrate",
+    "db:migrate:deploy": "cd packages/db && npm run db:migrate:deploy",
+    "db:migrate:reset": "cd packages/db && npm run db:migrate:reset",
+    "db:seed": "cd packages/db && npm run db:seed",
+    "db:studio": "cd packages/db && npm run db:studio",
+    "db:push": "cd packages/db && npm run db:push",
+    "db:format": "cd packages/db && npm run db:format",
+    "db:validate": "cd packages/db && npm run db:validate",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^9.2.12",
+    "ora": "^7.0.1",
+    "p-queue": "^7.4.1",
+    "playwright": "^1.40.0",
+    "puppeteer": "^21.6.0",
+    "redis": "^4.6.11",
+    "selenium-webdriver": "^4.35.0",
+    "uuid": "^9.0.1",
+    "xstate": "^5.5.0",
+    "zod": "^3.22.4"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@turnuvayonetim/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Database package for TURNUVAYONETIM poker tournament management system",
+  "main": "index.js",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:reset": "prisma migrate reset",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx seed.ts",
+    "db:push": "prisma db push",
+    "db:format": "prisma format",
+    "db:validate": "prisma validate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "tsx": "^3.12.0",
+    "typescript": "^5.0.0"
+  }
+}

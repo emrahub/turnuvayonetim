@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: tournament
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Agent Chrome instances
+  chrome-architect:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+      - SE_NODE_SESSION_TIMEOUT=86400
+    volumes:
+      - ./profiles/architect:/home/seluser
+
+  chrome-backend:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4445:4444"
+      - "7901:7900"
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+    volumes:
+      - ./profiles/backend:/home/seluser
+
+  chrome-frontend:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4446:4444"
+      - "7902:7900"
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+    volumes:
+      - ./profiles/frontend:/home/seluser
+
+  chrome-devops:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4447:4444"
+      - "7903:7900"
+    shm_size: 2gb
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+    volumes:
+      - ./profiles/devops:/home/seluser
+
+volumes:
+  postgres_data:
+  redis_data:

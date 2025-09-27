@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 248, 250, 252;
+  --primary-rgb: 37, 99, 235;
+  --secondary-rgb: 75, 85, 99;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 17, 24, 39;
+    --background-end-rgb: 31, 41, 55;
+    --primary-rgb: 59, 130, 246;
+    --secondary-rgb: 156, 163, 175;
+  }
+}
+
+/* PWA Specific Styles */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgb(var(--background-end-rgb))
+      )
+      rgb(var(--background-start-rgb));
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+
+  /* PWA Safe Areas */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Offline Status Indicator */
+  body.offline {
+    filter: grayscale(50%);
+  }
+
+  body.offline::before {
+    content: "Çevrimdışı";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ef4444;
+    color: white;
+    text-align: center;
+    padding: 4px 8px;
+    font-size: 12px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  /* Standalone mode adjustments */
+  @media (display-mode: standalone) {
+    body {
+      background: rgb(var(--background-start-rgb));
+    }
+
+    /* Hide browser UI in standalone mode */
+    .browser-ui {
+      display: none;
+    }
+  }
+}
+
+@layer components {
+  /* PWA Install Button */
+  .pwa-install-btn {
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200;
+  }
+
+  /* PWA Update Banner */
+  .pwa-update-banner {
+    @apply fixed top-0 left-0 right-0 bg-green-600 text-white p-3 text-center text-sm font-medium z-50 transform transition-transform duration-300;
+  }
+
+  .pwa-update-banner.hidden {
+    @apply -translate-y-full;
+  }
+
+  /* PWA Prompt Card */
+  .pwa-prompt {
+    @apply fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto;
+  }
+
+  .pwa-prompt-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4;
+  }
+
+  /* Offline Indicator */
+  .offline-indicator {
+    @apply fixed top-4 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium z-50 shadow-lg;
+  }
+
+  /* PWA Card */
+  .pwa-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+  }
+
+  /* PWA Button */
+  .pwa-btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .pwa-btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+}
+
+@layer utilities {
+  /* PWA Safe Area Utilities */
+  .pwa-safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pwa-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pwa-safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pwa-safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Touch-friendly utilities */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* PWA Animation Utilities */
+  .pwa-fade-in {
+    animation: pwa-fadeIn 0.3s ease-in-out;
+  }
+
+  .pwa-slide-up {
+    animation: pwa-slideUp 0.3s ease-out;
+  }
+}
+
+/* PWA Animations */
+@keyframes pwa-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pwa-slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* PWA Responsive Breakpoints */
+@media (max-width: 640px) {
+  .pwa-prompt {
+    @apply left-2 right-2 bottom-2;
+  }
+}
+
+/* PWA Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .pwa-fade-in,
+  .pwa-slide-up {
+    animation: none;
+  }
+}

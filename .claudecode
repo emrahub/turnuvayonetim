@@ -1,0 +1,22 @@
+{
+  "project": "TURNUVAYÖNETIM - Poker Tournament Management System",
+  "description": "BlindValet benzeri gelişmiş poker turnuva yönetim sistemi",
+  "architecture": "modular-monorepo",
+  "tech_stack": {
+    "frontend": ["Next.js 14", "React 18", "TypeScript", "Tailwind CSS", "Socket.IO Client"],
+    "backend": ["Node.js", "TypeScript", "Prisma", "PostgreSQL", "Redis", "Socket.IO"],
+    "tools": ["Turborepo", "Docker", "Playwright", "Vitest"],
+    "orchestration": ["MBAO (Browser Agents)", "Puppeteer", "Task Queue"]
+  },
+  "features": [
+    "real-time-clock-sync",
+    "offline-first-pwa",
+    "event-sourcing",
+    "multi-tenant",
+    "browser-agent-orchestration"
+  ],
+  "agents": {
+    "count": 4,
+    "roles": ["architect", "backend", "frontend", "devops"]
+  }
+}

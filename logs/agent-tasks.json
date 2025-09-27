@@ -1,0 +1,156 @@
+{
+  "project": "TURNUVAYONETIM",
+  "sprint": "Sprint 1 - Backend Foundation",
+  "timestamp": "2025-09-27T13:20:00.000Z",
+  "status": "planning",
+  "agents": {
+    "architect": {
+      "name": "System Architect",
+      "port": 4444,
+      "status": "ready",
+      "currentTask": null,
+      "completedTasks": 2,
+      "upcomingTasks": [
+        {
+          "id": "arch-001",
+          "title": "Tournament State Machine Design",
+          "description": "Design comprehensive tournament lifecycle state machine",
+          "priority": "high",
+          "estimatedTime": "30min",
+          "dependencies": []
+        },
+        {
+          "id": "arch-002",
+          "title": "API Architecture Review",
+          "description": "Review and enhance current API structure for tournament management",
+          "priority": "high",
+          "estimatedTime": "20min",
+          "dependencies": ["arch-001"]
+        }
+      ]
+    },
+    "backend": {
+      "name": "Backend Developer",
+      "port": 4445,
+      "status": "ready",
+      "currentTask": null,
+      "completedTasks": 3,
+      "upcomingTasks": [
+        {
+          "id": "back-001",
+          "title": "Tournament Lifecycle API",
+          "description": "Implement complete tournament CRUD operations with state management",
+          "priority": "critical",
+          "estimatedTime": "45min",
+          "dependencies": ["arch-001"]
+        },
+        {
+          "id": "back-002",
+          "title": "Player Seating Algorithm",
+          "description": "Implement balanced seating algorithm for tournament tables",
+          "priority": "high",
+          "estimatedTime": "35min",
+          "dependencies": ["back-001"]
+        },
+        {
+          "id": "back-003",
+          "title": "Payout Calculator Engine",
+          "description": "Create flexible payout calculation system",
+          "priority": "high",
+          "estimatedTime": "30min",
+          "dependencies": []
+        },
+        {
+          "id": "back-004",
+          "title": "Clock Engine Integration",
+          "description": "Integrate tournament clock with WebSocket real-time updates",
+          "priority": "critical",
+          "estimatedTime": "40min",
+          "dependencies": ["back-001"]
+        }
+      ]
+    },
+    "frontend": {
+      "name": "Frontend Developer",
+      "port": 4446,
+      "status": "ready",
+      "currentTask": null,
+      "completedTasks": 3,
+      "upcomingTasks": [
+        {
+          "id": "front-001",
+          "title": "Dashboard Layout Components",
+          "description": "Create main dashboard layout with navigation and tournament overview",
+          "priority": "high",
+          "estimatedTime": "35min",
+          "dependencies": []
+        },
+        {
+          "id": "front-002",
+          "title": "Tournament Management Interface",
+          "description": "Build tournament creation and management UI",
+          "priority": "critical",
+          "estimatedTime": "45min",
+          "dependencies": ["front-001", "back-001"]
+        },
+        {
+          "id": "front-003",
+          "title": "Real-time Clock Display",
+          "description": "Implement WebSocket-connected tournament clock UI",
+          "priority": "critical",
+          "estimatedTime": "30min",
+          "dependencies": ["back-004"]
+        }
+      ]
+    },
+    "devops": {
+      "name": "DevOps Engineer",
+      "port": 4447,
+      "status": "ready",
+      "currentTask": null,
+      "completedTasks": 1,
+      "upcomingTasks": [
+        {
+          "id": "dev-001",
+          "title": "Database Migration System",
+          "description": "Setup automated database migrations and seeding",
+          "priority": "medium",
+          "estimatedTime": "25min",
+          "dependencies": []
+        },
+        {
+          "id": "dev-002",
+          "title": "Test Infrastructure Setup",
+          "description": "Initialize Jest, Playwright, and testing database",
+          "priority": "medium",
+          "estimatedTime": "30min",
+          "dependencies": []
+        }
+      ]
+    }
+  },
+  "sprintGoals": [
+    "Complete tournament lifecycle management",
+    "Implement player seating system",
+    "Integrate real-time clock functionality",
+    "Create functional tournament dashboard"
+  ],
+  "successCriteria": [
+    "Tournament can be created and started",
+    "Players can be seated automatically",
+    "Clock runs with real-time updates",
+    "Basic UI allows tournament management"
+  ],
+  "risks": [
+    {
+      "risk": "WebSocket integration complexity",
+      "mitigation": "Incremental testing approach",
+      "priority": "medium"
+    },
+    {
+      "risk": "Frontend component dependencies",
+      "mitigation": "Backend-first development",
+      "priority": "low"
+    }
+  ]
+}

@@ -1,0 +1,456 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= Organizations & Multi-tenancy =============
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       UserOrganization[]
+  tournaments Tournament[]
+  templates   Template[]
+  leagues     League[]
+}
+
+// ============= Users & Authentication =============
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  organizations UserOrganization[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+}
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           Role         @default(STAFF)
+  joinedAt       DateTime     @default(now())
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  DIRECTOR
+  STAFF
+  DISPLAY
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============= Tournaments =============
+
+model Tournament {
+  id             String           @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime?
+  status         TournamentStatus @default(SCHEDULED)
+  buyIn          Int              @default(0)
+  rebuyAllowed   Boolean          @default(false)
+  rebuyAmount    Int              @default(0)
+  addonAllowed   Boolean          @default(false)
+  addonAmount    Int              @default(0)
+  startingStack  Int              @default(10000)
+  maxPlayers     Int?
+  lateRegMinutes Int              @default(0)
+  guaranteedPrize Int?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  blindStructure BlindStructure?
+  entries        Entry[]
+  tables         Table[]
+  payouts        Payout[]
+  eliminations   Elimination[]
+  transactions   Transaction[]
+  clockStates    ClockState[]
+  leagueEvents   LeagueEvent[]
+  displays       Display[]
+}
+
+enum TournamentStatus {
+  SCHEDULED
+  REGISTERING
+  LIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+// ============= Blind Structure =============
+
+model BlindStructure {
+  id           String        @id @default(cuid())
+  tournamentId String        @unique
+  name         String?
+  description  String?
+
+  // Relations
+  tournament Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  levels     BlindLevel[]
+}
+
+model BlindLevel {
+  id               String         @id @default(cuid())
+  structureId      String
+  idx              Int
+  smallBlind       Int
+  bigBlind         Int
+  ante             Int            @default(0)
+  durationSeconds  Int            @default(900) // 15 minutes default
+  isBreak          Boolean        @default(false)
+  breakName        String?
+
+  // Relations
+  structure BlindStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@unique([structureId, idx])
+}
+
+// ============= Players & Entries =============
+
+model Player {
+  id          String   @id @default(cuid())
+  firstName   String?
+  lastName    String?
+  nickname    String?
+  email       String?  @unique
+  phone       String?
+  photoUrl    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  entries Entry[]
+}
+
+model Entry {
+  id           String      @id @default(cuid())
+  tournamentId String
+  playerId     String?
+  displayName  String
+  tableId      String?
+  seatNumber   Int?
+  chipCount    Int         @default(0)
+  status       EntryStatus @default(REGISTERED)
+  position     Int?
+  registeredAt DateTime    @default(now())
+  eliminatedAt DateTime?
+
+  // Relations
+  tournament    Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player        Player?        @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  table         Table?         @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  transactions  Transaction[]
+  eliminations  Elimination[]
+  seat          Seat?
+}
+
+enum EntryStatus {
+  REGISTERED
+  ACTIVE
+  ELIMINATED
+  WITHDRAWN
+}
+
+// ============= Tables & Seating =============
+
+model Table {
+  id           String   @id @default(cuid())
+  tournamentId String
+  tableNumber  Int
+  maxSeats     Int      @default(9)
+  status       TableStatus @default(ACTIVE)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  seats      Seat[]
+  entries    Entry[]
+
+  @@unique([tournamentId, tableNumber])
+}
+
+enum TableStatus {
+  ACTIVE
+  BREAKING
+  BROKEN
+}
+
+model Seat {
+  id         String   @id @default(cuid())
+  tableId    String
+  seatNumber Int
+  entryId    String?  @unique
+
+  // Relations
+  table Table  @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  entry Entry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  @@unique([tableId, seatNumber])
+}
+
+// ============= Eliminations & Transactions =============
+
+model Elimination {
+  id           String   @id @default(cuid())
+  tournamentId String
+  entryId      String
+  place        Int
+  eliminatedBy String?
+  eliminatedAt DateTime @default(now())
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  entry      Entry      @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id           String          @id @default(cuid())
+  tournamentId String
+  entryId      String
+  type         TransactionType
+  amount       Int
+  createdAt    DateTime        @default(now())
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  entry      Entry      @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+enum TransactionType {
+  BUYIN
+  REBUY
+  ADDON
+  CASHOUT
+}
+
+// ============= Payouts =============
+
+model Payout {
+  id           String   @id @default(cuid())
+  tournamentId String
+  place        Int
+  amount       Int
+  percentage   Float?
+  paid         Boolean  @default(false)
+  paidAt       DateTime?
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, place])
+}
+
+// ============= Leagues & Seasons =============
+
+model League {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  scoringSystem  Json
+  createdAt      DateTime @default(now())
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  events       LeagueEvent[]
+  standings    LeagueStanding[]
+}
+
+model LeagueEvent {
+  id           String   @id @default(cuid())
+  leagueId     String
+  tournamentId String
+  pointsMultiplier Float @default(1.0)
+
+  // Relations
+  league     League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, tournamentId])
+}
+
+model LeagueStanding {
+  id       String   @id @default(cuid())
+  leagueId String
+  playerId String
+  points   Int      @default(0)
+  events   Int      @default(0)
+  wins     Int      @default(0)
+  cashes   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, playerId])
+}
+
+// ============= Clock & State Management =============
+
+model ClockState {
+  id              String   @id @default(cuid())
+  tournamentId    String
+  currentLevelIdx Int      @default(0)
+  status          String   @default("idle")
+  levelStartTime  BigInt
+  pausedDuration  BigInt   @default(0)
+  serverTime      BigInt
+  createdAt       DateTime @default(now())
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
+// ============= Templates =============
+
+model Template {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  type           TemplateType
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+enum TemplateType {
+  BLIND_STRUCTURE
+  PAYOUT_STRUCTURE
+  TOURNAMENT_SETTINGS
+}
+
+// ============= Display & Kiosk Mode =============
+
+model Display {
+  id           String      @id @default(cuid())
+  tournamentId String
+  name         String
+  pin          String?
+  type         DisplayType
+  config       Json?
+  lastPing     DateTime?
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, pin])
+}
+
+enum DisplayType {
+  CLOCK
+  SEATING
+  STANDINGS
+  PAYOUTS
+}
+
+// ============= Audit & Events =============
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  organizationId String
+  aggregateId  String
+  aggregateType String
+  eventType    String
+  eventData    Json
+  metadata     Json?
+  version      Int
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  // Optional fields for faster queries
+  tournamentId String?
+  tableId      String?
+  userId       String?
+
+  @@index([organizationId])
+  @@index([aggregateId, aggregateType])
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([tournamentId])
+  @@index([organizationId, tournamentId])
+}
+
+model Snapshot {
+  id          String   @id @default(cuid())
+  organizationId String
+  aggregateId String
+  aggregateType String
+  version     Int
+  data        Json
+  createdAt   DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([aggregateId, version])
+  @@index([organizationId, aggregateId])
+  @@unique([organizationId, aggregateId])
+}

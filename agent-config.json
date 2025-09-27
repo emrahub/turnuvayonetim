@@ -1,0 +1,66 @@
+{
+  "agents": [
+    {
+      "id": "architect",
+      "name": "System Architect",
+      "email": "${CODEX_1_EMAIL}",
+      "password": "${CODEX_1_PASSWORD}",
+      "platform": "https://chat.openai.com",
+      "role": "System design, database architecture, API design",
+      "capabilities": ["architecture", "database", "planning", "documentation"],
+      "browserConfig": {
+        "profilePath": "./profiles/architect",
+        "headless": false,
+        "position": "0,0"
+      }
+    },
+    {
+      "id": "backend",
+      "name": "Backend Developer",
+      "email": "${CODEX_2_EMAIL}",
+      "password": "${CODEX_2_PASSWORD}",
+      "platform": "https://chat.openai.com",
+      "role": "API development, WebSocket, event sourcing",
+      "capabilities": ["nodejs", "typescript", "prisma", "websocket", "redis"],
+      "browserConfig": {
+        "profilePath": "./profiles/backend",
+        "headless": false,
+        "position": "640,0"
+      }
+    },
+    {
+      "id": "frontend",
+      "name": "Frontend Developer",
+      "email": "${CODEX_3_EMAIL}",
+      "password": "${CODEX_3_PASSWORD}",
+      "platform": "https://chat.openai.com",
+      "role": "React components, UI/UX, PWA",
+      "capabilities": ["react", "nextjs", "tailwind", "typescript", "pwa"],
+      "browserConfig": {
+        "profilePath": "./profiles/frontend",
+        "headless": false,
+        "position": "0,400"
+      }
+    },
+    {
+      "id": "devops",
+      "name": "DevOps Engineer",
+      "email": "${CODEX_4_EMAIL}",
+      "password": "${CODEX_4_PASSWORD}",
+      "platform": "https://chat.openai.com",
+      "role": "Docker, CI/CD, testing, deployment",
+      "capabilities": ["docker", "kubernetes", "testing", "ci-cd", "monitoring"],
+      "browserConfig": {
+        "profilePath": "./profiles/devops",
+        "headless": false,
+        "position": "640,400"
+      }
+    }
+  ],
+  "orchestration": {
+    "maxConcurrency": 4,
+    "taskTimeout": 60000,
+    "retryAttempts": 3,
+    "retryDelay": 5000
+  }
+}
