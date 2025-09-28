@@ -25,12 +25,12 @@ export interface Player {
 }
 
 export interface BlindLevel {
-  level: number;
+  idx: number;
   smallBlind: number;
   bigBlind: number;
   ante: number;
-  duration: number; // in minutes
-  isBreak?: boolean;
+  durationSeconds: number;
+  isBreak: boolean;
   breakName?: string;
 }
 
@@ -85,6 +85,9 @@ interface TournamentStore {
   // Actions
   initializeSocket: (url?: string) => void;
   disconnectSocket: () => void;
+  getSocket: () => Socket | null;
+  emitClockCommand: (command: string, data?: any) => void;
+  joinTournament: (tournamentId: string) => void;
   setActiveView: (view: 'clock' | 'players' | 'tables' | 'statistics' | 'seating') => void;
   setShowPlayerModal: (show: boolean) => void;
   setShowTournamentModal: (show: boolean) => void;
@@ -123,16 +126,16 @@ interface TournamentStore {
 }
 
 const DEFAULT_BLIND_STRUCTURE: BlindLevel[] = [
-  { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 15 },
-  { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 15 },
-  { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 15 },
-  { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 15 },
-  { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 15 },
-  { level: 6, smallBlind: 200, bigBlind: 400, ante: 50, duration: 15, isBreak: true, breakName: 'Mola - 15 Dakika' },
-  { level: 7, smallBlind: 250, bigBlind: 500, ante: 75, duration: 15 },
-  { level: 8, smallBlind: 300, bigBlind: 600, ante: 75, duration: 15 },
-  { level: 9, smallBlind: 400, bigBlind: 800, ante: 100, duration: 15 },
-  { level: 10, smallBlind: 500, bigBlind: 1000, ante: 100, duration: 15 },
+  { idx: 0, smallBlind: 25, bigBlind: 50, ante: 0, durationSeconds: 900, isBreak: false },
+  { idx: 1, smallBlind: 50, bigBlind: 100, ante: 0, durationSeconds: 900, isBreak: false },
+  { idx: 2, smallBlind: 75, bigBlind: 150, ante: 25, durationSeconds: 900, isBreak: false },
+  { idx: 3, smallBlind: 100, bigBlind: 200, ante: 25, durationSeconds: 900, isBreak: false },
+  { idx: 4, smallBlind: 150, bigBlind: 300, ante: 50, durationSeconds: 900, isBreak: false },
+  { idx: 5, smallBlind: 200, bigBlind: 400, ante: 50, durationSeconds: 900, isBreak: true, breakName: 'Mola - 15 Dakika' },
+  { idx: 6, smallBlind: 250, bigBlind: 500, ante: 75, durationSeconds: 900, isBreak: false },
+  { idx: 7, smallBlind: 300, bigBlind: 600, ante: 75, durationSeconds: 900, isBreak: false },
+  { idx: 8, smallBlind: 400, bigBlind: 800, ante: 100, durationSeconds: 900, isBreak: false },
+  { idx: 9, smallBlind: 500, bigBlind: 1000, ante: 100, durationSeconds: 900, isBreak: false },
 ];
 
 const calculatePrizeStructure = (prizePool: number, playerCount: number) => {
@@ -186,11 +189,27 @@ export const useTournamentStore = create<TournamentStore>()(
 
     // Socket Management
     initializeSocket: (url = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3003') => {
+      // Prevent multiple socket connections
+      const existingSocket = get().socket;
+      if (existingSocket && existingSocket.connected) {
+        console.log('Socket already connected, skipping initialization');
+        return;
+      }
+
+      // Clean up existing socket if disconnected
+      if (existingSocket) {
+        existingSocket.removeAllListeners();
+        existingSocket.disconnect();
+      }
+
       const socket = io(url, {
         transports: ['websocket', 'polling'],
         auth: {
           token: typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-        }
+        },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
       });
 
       socket.on('connect', () => {
@@ -219,6 +238,7 @@ export const useTournamentStore = create<TournamentStore>()(
         get().updatePlayer(player);
       });
 
+      // Clock events
       socket.on('clock:sync', (clockState: any) => {
         const currentTournament = get().tournament;
         if (currentTournament) {
@@ -227,10 +247,26 @@ export const useTournamentStore = create<TournamentStore>()(
               ...currentTournament,
               timeRemaining: clockState.remainingSeconds,
               currentLevel: clockState.currentLevelIdx + 1, // Convert 0-based to 1-based
-              levelStartTime: new Date(clockState.serverTime - (clockState.elapsedSeconds * 1000))
+              levelStartTime: new Date(clockState.levelStartTime)
             }
           });
         }
+      });
+
+      socket.on('clock:started', (state: any) => {
+        console.log('Clock started:', state);
+      });
+
+      socket.on('clock:paused', (state: any) => {
+        console.log('Clock paused:', state);
+      });
+
+      socket.on('clock:resumed', (state: any) => {
+        console.log('Clock resumed:', state);
+      });
+
+      socket.on('tournament:joined', (data: any) => {
+        console.log('Tournament joined:', data);
       });
 
       socket.on('error', (error: string) => {
@@ -296,7 +332,7 @@ export const useTournamentStore = create<TournamentStore>()(
               ...currentTournament,
               currentLevel: clockState.currentLevelIdx + 1,
               timeRemaining: clockState.remainingSeconds,
-              levelStartTime: new Date()
+              levelStartTime: new Date(clockState.levelStartTime)
             }
           });
         }
@@ -316,11 +352,16 @@ export const useTournamentStore = create<TournamentStore>()(
       });
 
       // Add heartbeat ping
-      setInterval(() => {
+      const heartbeatInterval = setInterval(() => {
         if (socket.connected) {
           socket.emit('ping', Date.now());
         }
       }, 30000); // Ping every 30 seconds
+
+      // Store interval ID for cleanup
+      socket.on('disconnect', () => {
+        clearInterval(heartbeatInterval);
+      });
 
       set({ socket });
     },
@@ -328,8 +369,27 @@ export const useTournamentStore = create<TournamentStore>()(
     disconnectSocket: () => {
       const { socket } = get();
       if (socket) {
+        socket.removeAllListeners();
         socket.disconnect();
         set({ socket: null, isConnected: false });
+      }
+    },
+
+    getSocket: () => {
+      return get().socket;
+    },
+
+    emitClockCommand: (command: string, data?: any) => {
+      const { socket, tournament } = get();
+      if (socket && socket.connected && tournament) {
+        socket.emit(command, { tournamentId: tournament.id, ...data });
+      }
+    },
+
+    joinTournament: (tournamentId: string) => {
+      const { socket } = get();
+      if (socket && socket.connected) {
+        socket.emit('tournament:join', { tournamentId });
       }
     },
 

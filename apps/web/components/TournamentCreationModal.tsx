@@ -19,25 +19,25 @@ const DEFAULT_TOURNAMENT = {
 
 const PRESET_STRUCTURES = {
   turbo: [
-    { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 10 },
-    { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 10 },
-    { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 10 },
-    { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 10 },
-    { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 10 },
+    { idx: 0, smallBlind: 25, bigBlind: 50, ante: 0, durationSeconds: 600, isBreak: false },
+    { idx: 1, smallBlind: 50, bigBlind: 100, ante: 0, durationSeconds: 600, isBreak: false },
+    { idx: 2, smallBlind: 75, bigBlind: 150, ante: 25, durationSeconds: 600, isBreak: false },
+    { idx: 3, smallBlind: 100, bigBlind: 200, ante: 25, durationSeconds: 600, isBreak: false },
+    { idx: 4, smallBlind: 150, bigBlind: 300, ante: 50, durationSeconds: 600, isBreak: false },
   ],
   normal: [
-    { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 15 },
-    { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 15 },
-    { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 15 },
-    { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 15 },
-    { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 15 },
+    { idx: 0, smallBlind: 25, bigBlind: 50, ante: 0, durationSeconds: 900, isBreak: false },
+    { idx: 1, smallBlind: 50, bigBlind: 100, ante: 0, durationSeconds: 900, isBreak: false },
+    { idx: 2, smallBlind: 75, bigBlind: 150, ante: 25, durationSeconds: 900, isBreak: false },
+    { idx: 3, smallBlind: 100, bigBlind: 200, ante: 25, durationSeconds: 900, isBreak: false },
+    { idx: 4, smallBlind: 150, bigBlind: 300, ante: 50, durationSeconds: 900, isBreak: false },
   ],
   deep: [
-    { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 20 },
-    { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 20 },
-    { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 20 },
-    { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 20 },
-    { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 20 },
+    { idx: 0, smallBlind: 25, bigBlind: 50, ante: 0, durationSeconds: 1200, isBreak: false },
+    { idx: 1, smallBlind: 50, bigBlind: 100, ante: 0, durationSeconds: 1200, isBreak: false },
+    { idx: 2, smallBlind: 75, bigBlind: 150, ante: 25, durationSeconds: 1200, isBreak: false },
+    { idx: 3, smallBlind: 100, bigBlind: 200, ante: 25, durationSeconds: 1200, isBreak: false },
+    { idx: 4, smallBlind: 150, bigBlind: 300, ante: 50, durationSeconds: 1200, isBreak: false },
   ]
 };
 
@@ -59,11 +59,11 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
   const addBlindLevel = () => {
     const lastLevel = blindStructure[blindStructure.length - 1];
     const newLevel: BlindLevel = {
-      level: lastLevel.level + 1,
+      idx: lastLevel.idx + 1,
       smallBlind: Math.round(lastLevel.bigBlind * 1.5),
       bigBlind: Math.round(lastLevel.bigBlind * 2),
       ante: Math.round(lastLevel.ante * 1.5),
-      duration: 15,
+      durationSeconds: 900, // 15 minutes
       isBreak: false,
     };
     setBlindStructure([...blindStructure, newLevel]);
@@ -75,20 +75,25 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
     }
   };
 
-  const updateBlindLevel = (index: number, field: keyof BlindLevel, value: any) => {
+  const updateBlindLevel = (index: number, field: string, value: any) => {
     const updated = [...blindStructure];
-    updated[index] = { ...updated[index], [field]: value };
+    if (field === 'duration') {
+      // Convert minutes to seconds
+      updated[index] = { ...updated[index], durationSeconds: value * 60 };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
     setBlindStructure(updated);
   };
 
   const addBreak = () => {
     const lastLevel = blindStructure[blindStructure.length - 1];
     const newBreak: BlindLevel = {
-      level: lastLevel.level + 1,
+      idx: lastLevel.idx + 1,
       smallBlind: 0,
       bigBlind: 0,
       ante: 0,
-      duration: 15,
+      durationSeconds: 900, // 15 minutes
       isBreak: true,
       breakName: 'Mola'
     };
@@ -331,7 +336,7 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
                             `}
                           >
                             <div className="text-sm font-medium text-gray-300 w-12">
-                              L{level.level}
+                              L{level.idx + 1}
                             </div>
 
                             {level.isBreak ? (
@@ -345,7 +350,7 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
                                 />
                                 <input
                                   type="number"
-                                  value={level.duration}
+                                  value={Math.round(level.durationSeconds / 60)}
                                   onChange={(e) => updateBlindLevel(index, 'duration', Number(e.target.value))}
                                   className="w-16 px-2 py-1 bg-black/40 border border-gray-600 rounded text-white text-sm"
                                   min="1"
@@ -379,7 +384,7 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
                                 />
                                 <input
                                   type="number"
-                                  value={level.duration}
+                                  value={Math.round(level.durationSeconds / 60)}
                                   onChange={(e) => updateBlindLevel(index, 'duration', Number(e.target.value))}
                                   className="w-16 px-2 py-1 bg-black/40 border border-gray-600 rounded text-white text-sm"
                                   min="1"

@@ -167,7 +167,7 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
   const balance = getTableBalance();
 
   return (
-    <div className="bg-black/60 backdrop-blur-sm rounded-xl border border-gray-700 p-6">
+    <div className="bg-gradient-to-br from-black/70 to-gray-900/70 backdrop-blur-sm rounded-xl border-2 border-amber-600/30 p-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -221,23 +221,23 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
           >
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+              <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 rounded-lg p-4 text-center border border-amber-600/30">
                 <div className="text-2xl font-bold text-poker-gold">{activeTables.length}</div>
-                <div className="text-sm text-gray-400">Active Tables</div>
+                <div className="text-sm text-amber-300">Active Tables</div>
               </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-white">{activePlayers.length}</div>
-                <div className="text-sm text-gray-400">Active Players</div>
+              <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-lg p-4 text-center border border-green-600/30">
+                <div className="text-2xl font-bold text-green-400">{activePlayers.length}</div>
+                <div className="text-sm text-green-300">Active Players</div>
               </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+              <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 rounded-lg p-4 text-center border border-yellow-600/30">
                 <div className="text-2xl font-bold text-yellow-400">{breakingTables.length}</div>
-                <div className="text-sm text-gray-400">Breaking</div>
+                <div className="text-sm text-yellow-300">Breaking</div>
               </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                <div className={`text-2xl font-bold ${balance.balanced ? 'text-green-400' : 'text-yellow-400'}`}>
+              <div className={`bg-gradient-to-br rounded-lg p-4 text-center border ${balance.balanced ? 'from-green-900/30 to-green-800/20 border-green-600/30' : 'from-red-900/30 to-red-800/20 border-red-600/30'}`}>
+                <div className={`text-2xl font-bold ${balance.balanced ? 'text-green-400' : 'text-red-400'}`}>
                   {balance.variance}
                 </div>
-                <div className="text-sm text-gray-400">Variance</div>
+                <div className={`text-sm ${balance.balanced ? 'text-green-300' : 'text-red-300'}`}>Variance</div>
               </div>
             </div>
 
@@ -248,10 +248,10 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
                 onClick={() => handleTableAction('auto-balance')}
                 disabled={disabled || balance.balanced}
                 className={`
-                  p-4 rounded-lg border-2 transition-all duration-200 flex items-center gap-3
+                  p-4 rounded-lg border-2 transition-all duration-200 flex items-center gap-3 shadow-lg
                   ${balance.balanced
-                    ? 'border-gray-600 bg-gray-800/50 text-gray-500 cursor-not-allowed'
-                    : 'border-poker-gold bg-poker-gold/10 hover:bg-poker-gold/20 text-poker-gold hover:scale-105'
+                    ? 'border-gray-600 bg-gradient-to-br from-gray-800/50 to-gray-900/50 text-gray-500 cursor-not-allowed'
+                    : 'border-poker-gold bg-gradient-to-br from-amber-900/30 to-amber-800/20 hover:from-amber-800/40 hover:to-amber-700/30 text-poker-gold hover:shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                   }
                 `}
                 whileHover={!disabled && !balance.balanced ? { scale: 1.02 } : {}}
@@ -271,10 +271,10 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
                 onClick={() => handleTableAction('create-table')}
                 disabled={disabled || !canCreateTable()}
                 className={`
-                  p-4 rounded-lg border-2 transition-all duration-200 flex items-center gap-3
+                  p-4 rounded-lg border-2 transition-all duration-200 flex items-center gap-3 shadow-lg
                   ${!canCreateTable()
-                    ? 'border-gray-600 bg-gray-800/50 text-gray-500 cursor-not-allowed'
-                    : 'border-green-500 bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:scale-105'
+                    ? 'border-gray-600 bg-gradient-to-br from-gray-800/50 to-gray-900/50 text-gray-500 cursor-not-allowed'
+                    : 'border-green-500 bg-gradient-to-br from-green-900/30 to-green-800/20 hover:from-green-800/40 hover:to-green-700/30 text-green-400 hover:shadow-[0_0_15px_rgba(34,197,94,0.3)]'
                   }
                 `}
                 whileHover={!disabled && canCreateTable() ? { scale: 1.02 } : {}}
@@ -305,7 +305,7 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
                     return (
                       <div
                         key={table.id}
-                        className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-800/60 to-slate-900/60 rounded-lg border border-gray-600/30 hover:border-amber-600/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-white font-medium">
@@ -360,10 +360,10 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
                 <motion.div
                   key={algorithm.type}
                   className={`
-                    p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                    p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 shadow-lg
                     ${selectedAlgorithm.type === algorithm.type
-                      ? 'border-poker-gold bg-poker-gold/10'
-                      : 'border-gray-600 bg-gray-800/50 hover:border-gray-500'
+                      ? 'border-poker-gold bg-gradient-to-br from-amber-900/40 to-amber-800/30 shadow-[0_0_15px_rgba(255,215,0,0.2)]'
+                      : 'border-gray-600 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-amber-600/50 hover:from-gray-700/60 hover:to-gray-800/60'
                     }
                   `}
                   onClick={() => handleAlgorithmChange(algorithm)}
@@ -395,19 +395,19 @@ export const SeatingControls: React.FC<SeatingControlsProps> = ({
             <h3 className="text-lg font-semibold text-white mb-4">Seating Rules</h3>
             <div className="space-y-4">
               {rules.map((rule) => (
-                <div key={rule.type} className="bg-gray-800/50 rounded-lg p-4">
+                <div key={rule.type} className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-lg p-4 border border-gray-600/30">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-white font-medium">{rule.description}</label>
                     <input
                       type="number"
                       value={rule.value}
                       onChange={(e) => handleRuleChange(rule.type, parseInt(e.target.value) || 0)}
-                      className="w-20 px-2 py-1 bg-black/60 border border-gray-600 rounded text-white text-center"
+                      className="w-20 px-2 py-1 bg-black/60 border-2 border-amber-600/30 rounded text-amber-100 text-center focus:border-poker-gold focus:ring-2 focus:ring-poker-gold/20 transition-colors"
                       min="1"
                       max={rule.type === 'max_tables' ? 20 : rule.type.includes('players') ? 12 : 10}
                     />
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-amber-300">
                     Current: {rule.value}
                   </div>
                 </div>

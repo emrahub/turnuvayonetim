@@ -65,27 +65,27 @@ const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, fromTable, fr
     <motion.div
       ref={drag as any}
       className={`
-        p-3 bg-gray-800 rounded-lg border border-gray-600 cursor-move transition-all duration-200
-        hover:border-poker-gold hover:shadow-lg
-        ${isDragging ? 'opacity-50 scale-95' : 'opacity-100'}
+        p-3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg border-2 cursor-move transition-all duration-200
+        hover:border-poker-gold hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] hover:bg-gradient-to-br hover:from-slate-700 hover:to-slate-800
+        ${isDragging ? 'opacity-60 scale-95 shadow-[0_0_20px_rgba(255,215,0,0.5)] border-poker-gold' : 'opacity-100 border-gray-600'}
       `}
       whileHover={{ scale: 1.02 }}
       whileDrag={{ scale: 1.05, zIndex: 1000 }}
       layout
     >
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getStatusColor(player.status)}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-white/20 shadow-lg ${getStatusColor(player.status)}`}>
           {player.name.substring(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-white font-medium truncate">{player.name}</div>
-          <div className="text-poker-gold text-sm">{formatChips(player.chipCount)}</div>
+          <div className="text-poker-gold text-sm font-bold">{formatChips(player.chipCount)}</div>
           {fromTable && fromSeat && (
-            <div className="text-gray-400 text-xs">Table {fromTable}, Seat {fromSeat}</div>
+            <div className="text-amber-400 text-xs">Table {fromTable}, Seat {fromSeat}</div>
           )}
         </div>
         {player.isChipLeader && (
-          <div className="text-yellow-400 text-lg">👑</div>
+          <div className="text-yellow-400 text-xl drop-shadow-lg">👑</div>
         )}
       </div>
     </motion.div>
@@ -114,7 +114,7 @@ const UnassignedPlayers: React.FC<UnassignedPlayersProps> = ({
 
   return (
     <motion.div
-      className="bg-black/60 backdrop-blur-sm rounded-xl border border-gray-700 p-4"
+      className="bg-gradient-to-br from-black/70 to-gray-900/70 backdrop-blur-sm rounded-xl border-2 border-amber-600/30 p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
       layout
     >
       <div className="flex items-center justify-between mb-4">
@@ -296,7 +296,7 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
     <DndProvider backend={HTML5Backend}>
       <div className={`space-y-6 ${className}`}>
         {/* Header */}
-        <div className="bg-black/60 backdrop-blur-sm rounded-xl border border-gray-700 p-6">
+        <div className="bg-gradient-to-br from-black/70 to-gray-900/70 backdrop-blur-sm rounded-xl border-2 border-amber-600/30 p-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-poker-gold flex items-center gap-2">
@@ -443,13 +443,13 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
 
           {/* Main Chart Area */}
           <div className={`${showUnassigned && unassignedPlayers.length > 0 ? 'xl:col-span-2' : 'xl:col-span-3'}`}>
-            <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-gray-700 p-6 min-h-[600px]">
+            <div className="bg-gradient-to-br from-black/60 via-gray-900/50 to-black/60 backdrop-blur-sm rounded-xl border-2 border-amber-600/20 p-8 min-h-[600px] shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
               <motion.div
                 style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}
                 className="w-full h-full"
               >
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-16 place-items-start justify-items-center">
                     <AnimatePresence>
                       {seating.layout.tables
                         .filter(table => table.status !== 'broken')
@@ -461,6 +461,7 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3 }}
+                            className="w-full max-w-[550px]"
                           >
                             <TableCard
                               table={table}
@@ -468,7 +469,7 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
                               onSeatClick={handleSeatClick}
                               isSelected={selectedTable?.id === table.id}
                               showControls={showControls && !readOnly}
-                              className="h-full"
+                              className="h-full w-full"
                             />
                           </motion.div>
                         ))}

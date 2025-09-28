@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
+import { useTournamentStore } from '../../../stores/tournamentStore';
 
 interface Player {
   id: string;
@@ -39,7 +40,6 @@ export default function TournamentPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'players' | 'tables' | 'structure'>('players');
 
@@ -47,41 +47,47 @@ export default function TournamentPage() {
   const [newPlayerName, setNewPlayerName] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Initialize WebSocket connection
+  const { getSocket, initializeSocket, joinTournament: joinTournamentRoom } = useTournamentStore();
+
+  // Use shared WebSocket connection from store
   useEffect(() => {
     if (!tournamentId) return;
 
-    const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3003', {
-      transports: ['websocket']
-    });
+    // Ensure socket is initialized
+    initializeSocket();
 
-    newSocket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-      // Join tournament room
-      newSocket.emit('tournament:join', { tournamentId });
-    });
+    const socket = getSocket();
+    if (!socket) return;
 
-    newSocket.on('tournament:joined', (data) => {
+    // Join tournament room
+    joinTournamentRoom(tournamentId as string);
+
+    // Set up event listeners
+    const handleTournamentJoined = (data: any) => {
       setTournament(data.tournament);
       setLoading(false);
-    });
+    };
 
-    newSocket.on('player:registered', (data) => {
+    const handlePlayerRegistered = (data: any) => {
       console.log('Player registered:', data);
       loadPlayers();
-    });
+    };
 
-    newSocket.on('player:eliminated', (data) => {
+    const handlePlayerEliminated = (data: any) => {
       console.log('Player eliminated:', data);
       loadPlayers();
-    });
+    };
 
-    setSocket(newSocket);
+    socket.on('tournament:joined', handleTournamentJoined);
+    socket.on('player:registered', handlePlayerRegistered);
+    socket.on('player:eliminated', handlePlayerEliminated);
 
     return () => {
-      newSocket.close();
+      socket.off('tournament:joined', handleTournamentJoined);
+      socket.off('player:registered', handlePlayerRegistered);
+      socket.off('player:eliminated', handlePlayerEliminated);
     };
-  }, [tournamentId]);
+  }, [tournamentId, initializeSocket, getSocket, joinTournamentRoom]);
 
   // Load initial data
   useEffect(() => {
@@ -163,7 +169,10 @@ export default function TournamentPage() {
   };
 
   const registerPlayer = async () => {
-    if (!newPlayerName.trim() || !socket || !tournament) return;
+    if (!newPlayerName.trim() || !tournament) return;
+
+    const socket = getSocket();
+    if (!socket) return;
 
     setIsRegistering(true);
     try {
@@ -182,7 +191,10 @@ export default function TournamentPage() {
   };
 
   const eliminatePlayer = async (playerId: string) => {
-    if (!socket || !confirm('Are you sure you want to eliminate this player?')) return;
+    if (!confirm('Are you sure you want to eliminate this player?')) return;
+
+    const socket = getSocket();
+    if (!socket) return;
 
     try {
       const activePlayersCount = players.filter(p => p.status === 'ACTIVE').length;
@@ -197,7 +209,10 @@ export default function TournamentPage() {
   };
 
   const seatPlayers = async () => {
-    if (!socket || !confirm('This will reseat all players. Continue?')) return;
+    if (!confirm('This will reseat all players. Continue?')) return;
+
+    const socket = getSocket();
+    if (!socket) return;
 
     try {
       // Call seating API via WebSocket

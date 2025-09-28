@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   applicationName: 'Turnuva Yönetim',
   referrer: 'origin-when-cross-origin',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
   openGraph: {
     type: 'website',
     locale: 'tr_TR',

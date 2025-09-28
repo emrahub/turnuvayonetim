@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useTournamentStore } from '../../stores/tournamentStore';
 
 interface Tournament {
   id: string;
@@ -46,33 +46,29 @@ export default function DashboardPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [clockState, setClockState] = useState<ClockState | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize WebSocket connection
+  const { getSocket, initializeSocket, joinTournament } = useTournamentStore();
+
+  // Use shared WebSocket connection from store
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3003', {
-      transports: ['websocket']
-    });
+    // Ensure socket is initialized
+    initializeSocket();
 
-    newSocket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
+    const socket = getSocket();
+    if (!socket) return;
 
-    newSocket.on('clock:sync', (state: ClockState) => {
+    // Set up clock sync listener for dashboard
+    const handleClockSync = (state: ClockState) => {
       setClockState(state);
-    });
+    };
 
-    newSocket.on('tournament:joined', (data) => {
-      console.log('Tournament joined:', data);
-    });
-
-    setSocket(newSocket);
+    socket.on('clock:sync', handleClockSync);
 
     return () => {
-      newSocket.close();
+      socket.off('clock:sync', handleClockSync);
     };
-  }, []);
+  }, [initializeSocket, getSocket]);
 
   // Load tournaments
   useEffect(() => {
@@ -116,19 +112,22 @@ export default function DashboardPage() {
   };
 
   const startTournament = async (tournamentId: string) => {
+    const socket = getSocket();
     if (socket) {
-      socket.emit('tournament:join', { tournamentId });
+      joinTournament(tournamentId);
       socket.emit('clock:start', { tournamentId, levelIdx: 0 });
     }
   };
 
   const pauseTournament = async (tournamentId: string) => {
+    const socket = getSocket();
     if (socket) {
       socket.emit('clock:pause', { tournamentId });
     }
   };
 
   const resumeTournament = async (tournamentId: string) => {
+    const socket = getSocket();
     if (socket) {
       socket.emit('clock:resume', { tournamentId });
     }

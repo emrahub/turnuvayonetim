@@ -351,12 +351,12 @@ export default function Home() {
                   <TournamentClock
                     tournamentId={tournament.id}
                     levels={tournament.blindStructure.map((level, index) => ({
-                      idx: index,
+                      idx: level.idx,
                       smallBlind: level.smallBlind * 100, // Convert to cents for TournamentClock
                       bigBlind: level.bigBlind * 100,
                       ante: level.ante * 100,
-                      durationSeconds: level.duration * 60,
-                      isBreak: level.isBreak || false,
+                      durationSeconds: level.durationSeconds,
+                      isBreak: level.isBreak,
                       breakName: level.breakName
                     }))}
                     isController={true}
