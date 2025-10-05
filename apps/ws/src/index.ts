@@ -253,10 +253,14 @@ io.on('connection', (socket) => {
     const state = clock.start(levelIdx);
 
     // Update tournament status
-    await prisma.tournament.update({
-      where: { id: tournamentId },
-      data: { status: 'LIVE' }
-    });
+    try {
+      await prisma.tournament.update({
+        where: { id: tournamentId },
+        data: { status: 'LIVE' }
+      });
+    } catch (error) {
+      logger.warn(`Failed to update tournament ${tournamentId} status`, { error });
+    }
 
     // Broadcast to all clients in room
     io.to(`tournament:${tournamentId}`).emit('clock:started', state);
@@ -273,10 +277,14 @@ io.on('connection', (socket) => {
 
     const state = clock.pause();
 
-    await prisma.tournament.update({
-      where: { id: tournamentId },
-      data: { status: 'PAUSED' }
-    });
+    try {
+      await prisma.tournament.update({
+        where: { id: tournamentId },
+        data: { status: 'PAUSED' }
+      });
+    } catch (error) {
+      logger.warn(`Failed to update tournament ${tournamentId} status`, { error });
+    }
 
     io.to(`tournament:${tournamentId}`).emit('clock:paused', state);
   });
@@ -292,10 +300,14 @@ io.on('connection', (socket) => {
 
     const state = clock.resume();
 
-    await prisma.tournament.update({
-      where: { id: tournamentId },
-      data: { status: 'LIVE' }
-    });
+    try {
+      await prisma.tournament.update({
+        where: { id: tournamentId },
+        data: { status: 'LIVE' }
+      });
+    } catch (error) {
+      logger.warn(`Failed to update tournament ${tournamentId} status`, { error });
+    }
 
     io.to(`tournament:${tournamentId}`).emit('clock:resumed', state);
   });
