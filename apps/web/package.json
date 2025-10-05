@@ -16,7 +16,10 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",
+    "date-fns": "^2.30.0",
     "framer-motion": "^10.16.0",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.294.0",
     "next": "14.2.0",
     "next-pwa": "^5.6.0",
@@ -25,10 +28,13 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.1",
+    "recharts": "^3.2.1",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.0",
+    "timesync": "^1.0.11",
     "typescript": "^5.3.0",
     "workbox-webpack-plugin": "^7.3.0",
+    "xlsx": "^0.18.5",
     "zustand": "^4.4.7"
   }
 }

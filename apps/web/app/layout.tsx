@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+import { BRAND } from '../lib/brand'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Turnuva Yönetim Sistemi',
-    template: '%s | Turnuva Yönetim',
+    default: BRAND.meta.title,
+    template: `%s | ${BRAND.name}`,
   },
-  description: 'Profesyonel turnuva organizasyonu ve yönetim sistemi - Gerçek zamanlı özelliklerle',
-  keywords: ['turnuva', 'yönetim', 'organizasyon', 'spor', 'müsabaka', 'poker', 'tenis', 'futbol'],
-  authors: [{ name: 'Turnuva Yönetim Ekibi' }],
-  creator: 'Turnuva Yönetim',
-  publisher: 'Turnuva Yönetim',
+  description: BRAND.meta.description,
+  keywords: BRAND.meta.keywords.split(', '),
+  authors: [{ name: BRAND.meta.author }],
+  creator: BRAND.name,
+  publisher: BRAND.name,
   formatDetection: {
     email: false,
     address: false,
@@ -23,36 +26,37 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Turnuva Yönetim',
+    title: BRAND.name,
     startupImage: [
       '/apple-touch-startup-image-750x1334.png',
       '/apple-touch-startup-image-1242x2208.png',
     ],
   },
-  applicationName: 'Turnuva Yönetim',
+  applicationName: BRAND.name,
   referrer: 'origin-when-cross-origin',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
   openGraph: {
     type: 'website',
-    locale: 'tr_TR',
+    locale: 'en_US',
     url: '/',
-    siteName: 'Turnuva Yönetim',
-    title: 'Turnuva Yönetim Sistemi',
-    description: 'Profesyonel turnuva organizasyonu ve yönetim sistemi',
+    siteName: BRAND.name,
+    title: BRAND.meta.title,
+    description: BRAND.meta.description,
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Turnuva Yönetim Sistemi',
+        alt: BRAND.meta.title,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Turnuva Yönetim Sistemi',
-    description: 'Profesyonel turnuva organizasyonu ve yönetim sistemi',
+    title: BRAND.meta.title,
+    description: BRAND.meta.description,
     images: ['/twitter-image.png'],
+    creator: BRAND.meta.twitter,
   },
   robots: {
     index: true,
@@ -106,13 +110,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="tr" suppressHydrationWarning>
       <head>
         {/* PWA Meta Tags */}
-        <meta name="application-name" content="Turnuva Yönetim" />
+        <meta name="application-name" content={BRAND.name} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Turnuva Yönetim" />
+        <meta name="apple-mobile-web-app-title" content={BRAND.name} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#2563eb" />
+        <meta name="msapplication-TileColor" content="#3B82F6" />
         <meta name="msapplication-tap-highlight" content="no" />
 
         {/* Preload critical resources */}
@@ -184,7 +188,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
         />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        {children}
+        <Header />
+        <main className="min-h-screen">
+          {children}
+        </main>
+        <Footer />
 
         {/* PWA Update Check */}
         <script

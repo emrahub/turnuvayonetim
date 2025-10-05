@@ -128,6 +128,48 @@ model Event {
   @@index([tournamentId])
 }
 
+model HandHistory {
+  id           String   @id
+  tournamentId String
+  tableId      String?
+  handNumber   Int
+  timestamp    DateTime @default(now())
+  players      Json     // [{id, name, position, chips}]
+  actions      Json     // [{type, player, amount, timestamp}]
+  board        Json?    // Community cards
+  winners      Json?    // [{playerId, amount}]
+  potSize      Int?
+  metadata     Json?    // Additional data (dealer position, etc.)
+
+  @@index([tournamentId])
+  @@index([tournamentId, handNumber])
+  @@index([timestamp])
+}
+
+model PlayerStatistics {
+  id                String   @id
+  playerId          String   @unique
+  totalTournaments  Int      @default(0)
+  wins              Int      @default(0)
+  cashes            Int      @default(0)
+  totalBuyins       Int      @default(0)
+  totalWinnings     Int      @default(0)
+  avgFinishPosition Float?
+  bestFinish        Int?
+  worstFinish       Int?
+  handsPlayed       Int      @default(0)
+  vpip              Float?   // Voluntarily Put money In Pot %
+  pfr               Float?   // Pre-Flop Raise %
+  aggression        Float?   // Aggression factor
+  lastPlayed        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@index([totalWinnings])
+  @@index([wins])
+  @@index([totalTournaments])
+}
+
 model League {
   id             String           @id
   organizationId String

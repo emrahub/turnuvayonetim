@@ -6,6 +6,8 @@ import { playerRouter } from './player';
 import { tableRouter } from './table';
 import { clockRouter } from './clock';
 import { statsRouter } from './stats';
+import { analyticsRouter } from './analytics';
+import { leaderboardRouter } from './leaderboard';
 
 export const appRouter = router({
   auth: authRouter,
@@ -15,6 +17,8 @@ export const appRouter = router({
   table: tableRouter,
   clock: clockRouter,
   stats: statsRouter,
+  analytics: analyticsRouter,
+  leaderboard: leaderboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,368 +1,377 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, BarChart3, Users, Trophy, Clock, TrendingUp, DollarSign, Target, Award, Calendar, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTournamentStore } from '../../stores/tournamentStore';
-
-interface Tournament {
-  id: string;
-  name: string;
-  status: 'SCHEDULED' | 'LIVE' | 'PAUSED' | 'COMPLETED';
-  startDate: string;
-  buyIn: number;
-  startingStack: number;
-  playersCount: number;
-  tablesCount: number;
-  prizePool: number;
-}
-
-interface ClockState {
-  tournamentId: string;
-  status: 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
-  currentLevelIdx: number;
-  currentLevel: {
-    idx: number;
-    smallBlind: number;
-    bigBlind: number;
-    ante: number;
-    durationSeconds: number;
-    isBreak: boolean;
-    breakName?: string;
-  };
-  nextLevel?: {
-    idx: number;
-    smallBlind: number;
-    bigBlind: number;
-    ante: number;
-    durationSeconds: number;
-    isBreak: boolean;
-    breakName?: string;
-  };
-  elapsedSeconds: number;
-  remainingSeconds: number;
-  totalElapsedSeconds: number;
-}
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
+import { exportAnalyticsReport } from '../../lib/export-utils';
 
 export default function DashboardPage() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-  const [clockState, setClockState] = useState<ClockState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { tournament, players } = useTournamentStore();
+  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'all'>('week');
 
-  const { getSocket, initializeSocket, joinTournament } = useTournamentStore();
+  // Mock data - gerçek veritabanı entegrasyonu için hazır
+  const tournamentHistory = useMemo(() => [
+    { date: '2025-10-01', tournaments: 5, players: 45, prizePool: 50000 },
+    { date: '2025-10-02', tournaments: 8, players: 72, prizePool: 80000 },
+    { date: '2025-10-03', tournaments: 6, players: 54, prizePool: 60000 },
+    { date: '2025-10-04', tournaments: 10, players: 95, prizePool: 105000 },
+    { date: '2025-10-05', tournaments: 7, players: 63, prizePool: 70000 },
+  ], []);
 
-  // Use shared WebSocket connection from store
-  useEffect(() => {
-    // Ensure socket is initialized
-    initializeSocket();
+  const playerStats = useMemo(() => {
+    const activePlayers = players.filter(p => p.status === 'active');
+    const eliminatedPlayers = players.filter(p => p.status === 'eliminated');
 
-    const socket = getSocket();
-    if (!socket) return;
+    return [
+      { name: 'Aktif', value: activePlayers.length, color: '#0D7938' },
+      { name: 'Elenen', value: eliminatedPlayers.length, color: '#C53030' },
+      { name: 'Beklemede', value: players.filter(p => p.status === 'waiting').length, color: '#FFD700' },
+    ];
+  }, [players]);
 
-    // Set up clock sync listener for dashboard
-    const handleClockSync = (state: ClockState) => {
-      setClockState(state);
-    };
+  const topPlayers = useMemo(() => {
+    return [...players]
+      .sort((a, b) => b.chipCount - a.chipCount)
+      .slice(0, 10)
+      .map((p, i) => ({
+        rank: i + 1,
+        name: p.name,
+        chips: p.chipCount,
+        status: p.status
+      }));
+  }, [players]);
 
-    socket.on('clock:sync', handleClockSync);
+  const totalChips = useMemo(() =>
+    players.reduce((sum, p) => sum + p.chipCount, 0),
+    [players]
+  );
 
-    return () => {
-      socket.off('clock:sync', handleClockSync);
-    };
-  }, [initializeSocket, getSocket]);
+  const averageStack = useMemo(() =>
+    players.length > 0 ? Math.round(totalChips / players.length) : 0,
+    [totalChips, players.length]
+  );
 
-  // Load tournaments
-  useEffect(() => {
-    loadTournaments();
-  }, []);
-
-  const loadTournaments = async () => {
-    try {
-      // Simulated tournament data for now
-      const mockTournaments: Tournament[] = [
-        {
-          id: '1',
-          name: 'Friday Night Poker',
-          status: 'SCHEDULED',
-          startDate: new Date().toISOString(),
-          buyIn: 100,
-          startingStack: 10000,
-          playersCount: 24,
-          tablesCount: 3,
-          prizePool: 2400
-        },
-        {
-          id: '2',
-          name: 'Weekend Championship',
-          status: 'LIVE',
-          startDate: new Date().toISOString(),
-          buyIn: 250,
-          startingStack: 20000,
-          playersCount: 45,
-          tablesCount: 5,
-          prizePool: 11250
-        }
-      ];
-
-      setTournaments(mockTournaments);
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to load tournaments:', error);
-      setLoading(false);
+  const stats = [
+    {
+      icon: Trophy,
+      label: 'Toplam Turnuva',
+      value: tournamentHistory.reduce((sum, t) => sum + t.tournaments, 0),
+      change: '+12%',
+      accentColor: 'text-brand-400'
+    },
+    {
+      icon: Users,
+      label: 'Toplam Oyuncu',
+      value: players.length,
+      change: `${players.filter(p => p.status === 'active').length} aktif`,
+      accentColor: 'text-success-500'
+    },
+    {
+      icon: DollarSign,
+      label: 'Toplam Ödül Havuzu',
+      value: `${(tournamentHistory.reduce((sum, t) => sum + t.prizePool, 0) / 1000).toFixed(0)}K`,
+      change: '+8%',
+      accentColor: 'text-blue-400'
+    },
+    {
+      icon: Target,
+      label: 'Ortalama Stack',
+      value: averageStack.toLocaleString('tr-TR'),
+      change: `${totalChips.toLocaleString('tr-TR')} toplam`,
+      accentColor: 'text-purple-400'
     }
-  };
-
-  const startTournament = async (tournamentId: string) => {
-    const socket = getSocket();
-    if (socket) {
-      joinTournament(tournamentId);
-      socket.emit('clock:start', { tournamentId, levelIdx: 0 });
-    }
-  };
-
-  const pauseTournament = async (tournamentId: string) => {
-    const socket = getSocket();
-    if (socket) {
-      socket.emit('clock:pause', { tournamentId });
-    }
-  };
-
-  const resumeTournament = async (tournamentId: string) => {
-    const socket = getSocket();
-    if (socket) {
-      socket.emit('clock:resume', { tournamentId });
-    }
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
-    }).format(amount);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading tournaments...</div>
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            🏆 Tournament Dashboard
-          </h1>
-          <p className="text-green-200">
-            Manage and monitor poker tournaments in real-time
-          </p>
-        </div>
-
-        {/* Tournament Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-          {tournaments.map((tournament) => (
-            <div
-              key={tournament.id}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
-              onClick={() => setSelectedTournament(tournament)}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+      {/* Header */}
+      <div className="card border-b border-white/10 rounded-none">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition"
             >
-              {/* Tournament Status Badge */}
-              <div className="flex items-center justify-between mb-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    tournament.status === 'LIVE'
-                      ? 'bg-red-500 text-white'
-                      : tournament.status === 'SCHEDULED'
-                      ? 'bg-blue-500 text-white'
-                      : tournament.status === 'PAUSED'
-                      ? 'bg-yellow-500 text-black'
-                      : 'bg-gray-500 text-white'
-                  }`}
-                >
-                  {tournament.status}
-                </span>
-                <div className="text-white/80 text-sm">
-                  ID: {tournament.id}
-                </div>
+              <ArrowLeft className="icon-md" />
+              <span>Geri Dön</span>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-800/60 rounded-lg">
+                <BarChart3 className="icon-lg text-success-500" />
               </div>
-
-              {/* Tournament Name */}
-              <h3 className="text-xl font-bold text-white mb-3">
-                {tournament.name}
-              </h3>
-
-              {/* Tournament Stats */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-white/60">Buy-in</div>
-                  <div className="text-white font-medium">
-                    {formatCurrency(tournament.buyIn)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-white/60">Starting Stack</div>
-                  <div className="text-white font-medium">
-                    {tournament.startingStack.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-white/60">Players</div>
-                  <div className="text-white font-medium">
-                    {tournament.playersCount}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-white/60">Tables</div>
-                  <div className="text-white font-medium">
-                    {tournament.tablesCount}
-                  </div>
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
+                <p className="text-sm text-gray-400">Turnuva İstatistikleri ve Analizler</p>
               </div>
+            </div>
 
-              {/* Prize Pool */}
-              <div className="mt-4 pt-4 border-t border-white/20">
-                <div className="text-white/60 text-sm">Prize Pool</div>
-                <div className="text-2xl font-bold text-yellow-400">
-                  {formatCurrency(tournament.prizePool)}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-4 flex gap-2">
-                {tournament.status === 'SCHEDULED' && (
+            <div className="flex items-center gap-4">
+              {/* Export Dropdown */}
+              <div className="relative group">
+                <button className="btn-secondary flex items-center gap-2">
+                  <Download className="icon-sm" />
+                  <span>Export</span>
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-48 bg-black/90 backdrop-blur-sm border border-white/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startTournament(tournament.id);
-                    }}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    onClick={() => exportAnalyticsReport({ tournamentHistory, playerStats: [], topPlayers, timeRange }, 'excel')}
+                    className="w-full px-4 py-2 text-left text-white hover:bg-white/10 flex items-center gap-2 rounded-t-lg"
                   >
-                    Start
+                    <FileSpreadsheet className="icon-sm text-green-400" />
+                    Excel (.xlsx)
                   </button>
-                )}
-                {tournament.status === 'LIVE' && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      pauseTournament(tournament.id);
-                    }}
-                    className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    onClick={() => exportAnalyticsReport({ tournamentHistory, playerStats: [], topPlayers, timeRange }, 'pdf')}
+                    className="w-full px-4 py-2 text-left text-white hover:bg-white/10 flex items-center gap-2"
                   >
-                    Pause
+                    <FileText className="icon-sm text-red-400" />
+                    PDF
                   </button>
-                )}
-                {tournament.status === 'PAUSED' && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      resumeTournament(tournament.id);
-                    }}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    onClick={() => exportAnalyticsReport({ tournamentHistory, playerStats: [], topPlayers, timeRange }, 'csv')}
+                    className="w-full px-4 py-2 text-left text-white hover:bg-white/10 flex items-center gap-2 rounded-b-lg"
                   >
-                    Resume
+                    <FileText className="icon-sm text-blue-400" />
+                    CSV
                   </button>
-                )}
+                </div>
               </div>
+
+              {/* Time Range Selector */}
+              <div className="flex gap-2">
+                {(['day', 'week', 'month', 'all'] as const).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={
+                      timeRange === range
+                        ? 'btn-primary'
+                        : 'btn-secondary'
+                    }
+                  >
+                    {range === 'day' ? 'Gün' : range === 'week' ? 'Hafta' : range === 'month' ? 'Ay' : 'Tümü'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <div
+              key={index}
+              className="card p-6"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 bg-slate-800/60 rounded-lg ${stat.accentColor}`}>
+                  <stat.icon className="icon-lg" />
+                </div>
+                <span className="text-xs text-success-500 font-semibold">{stat.change}</span>
+              </div>
+              <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-400">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Tournament Clock */}
-        {selectedTournament && clockState && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              🕐 Tournament Clock
-            </h2>
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Tournament Trend Chart */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <TrendingUp className="icon-md text-success-500" />
+              Turnuva Trendi
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={tournamentHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis
+                  dataKey="date"
+                  stroke="#888"
+                  tick={{ fill: '#888' }}
+                  tickFormatter={(value) => format(new Date(value), 'dd MMM', { locale: tr })}
+                />
+                <YAxis stroke="#888" tick={{ fill: '#888' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#888' }} />
+                <Line
+                  type="monotone"
+                  dataKey="tournaments"
+                  stroke="#0D7938"
+                  strokeWidth={3}
+                  name="Turnuvalar"
+                  dot={{ fill: '#0D7938', r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="players"
+                  stroke="#FFD700"
+                  strokeWidth={3}
+                  name="Oyuncular"
+                  dot={{ fill: '#FFD700', r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Current Level */}
-              <div className="bg-white/10 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Current Level {clockState.currentLevel.idx + 1}
-                </h3>
-                {clockState.currentLevel.isBreak ? (
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-yellow-400 mb-2">
-                      BREAK
-                    </div>
-                    <div className="text-white">
-                      {clockState.currentLevel.breakName || 'Break Time'}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white mb-2">
-                      {clockState.currentLevel.smallBlind.toLocaleString()} / {clockState.currentLevel.bigBlind.toLocaleString()}
-                    </div>
-                    {clockState.currentLevel.ante > 0 && (
-                      <div className="text-white/80">
-                        Ante: {clockState.currentLevel.ante.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+          {/* Player Status Pie Chart */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Users className="icon-md text-brand-400" />
+              Oyuncu Durumu
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={playerStats}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {playerStats.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-              {/* Time Remaining */}
-              <div className="bg-white/10 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Time Remaining
-                </h3>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-green-400 mb-2">
-                    {formatTime(clockState.remainingSeconds)}
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Prize Pool Bar Chart */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <DollarSign className="icon-md text-blue-400" />
+              Ödül Havuzu Dağılımı
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={tournamentHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis
+                  dataKey="date"
+                  stroke="#888"
+                  tick={{ fill: '#888' }}
+                  tickFormatter={(value) => format(new Date(value), 'dd MMM', { locale: tr })}
+                />
+                <YAxis stroke="#888" tick={{ fill: '#888' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                  formatter={(value: number) => `${(value / 1000).toFixed(0)}K TRY`}
+                />
+                <Bar
+                  dataKey="prizePool"
+                  fill="#3B82F6"
+                  name="Ödül Havuzu"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Top Players Leaderboard */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Award className="icon-md text-brand-400" />
+              Top 10 Oyuncular
+            </h3>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {topPlayers.map((player) => (
+                <div
+                  key={player.rank}
+                  className="flex items-center justify-between p-3 bg-slate-800/40 rounded-lg border border-white/5 hover:border-brand-400/30 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      player.rank === 1 ? 'bg-brand-400 text-black' :
+                      player.rank === 2 ? 'bg-gray-400 text-black' :
+                      player.rank === 3 ? 'bg-amber-700 text-white' :
+                      'bg-gray-700 text-gray-300'
+                    }`}>
+                      {player.rank}
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">{player.name}</div>
+                      <div className="text-xs text-gray-400 capitalize">{player.status}</div>
+                    </div>
                   </div>
-                  <div className="text-white/80">
-                    Total: {formatTime(clockState.totalElapsedSeconds)}
+                  <div className="text-brand-400 font-bold">
+                    {player.chips.toLocaleString('tr-TR')}
                   </div>
                 </div>
-              </div>
-
-              {/* Next Level */}
-              <div className="bg-white/10 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Next Level
-                </h3>
-                {clockState.nextLevel ? (
-                  clockState.nextLevel.isBreak ? (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-400 mb-2">
-                        BREAK
-                      </div>
-                      <div className="text-white">
-                        {clockState.nextLevel.breakName || 'Break Time'}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white mb-2">
-                        {clockState.nextLevel.smallBlind.toLocaleString()} / {clockState.nextLevel.bigBlind.toLocaleString()}
-                      </div>
-                      {clockState.nextLevel.ante > 0 && (
-                        <div className="text-white/80">
-                          Ante: {clockState.nextLevel.ante.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <div className="text-center text-white/60">
-                    Tournament Complete
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="card p-6 border-brand-400/20">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Calendar className="icon-md text-brand-400" />
+            Hızlı İstatistikler
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-brand-400 mb-1">
+                {tournamentHistory[tournamentHistory.length - 1]?.tournaments || 0}
+              </div>
+              <div className="text-sm text-gray-300">Bugünkü Turnuvalar</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-success-500 mb-1">
+                {(tournamentHistory.reduce((sum, t) => sum + t.players, 0) / tournamentHistory.length).toFixed(0)}
+              </div>
+              <div className="text-sm text-gray-300">Ortalama Katılımcı</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-400 mb-1">
+                {Math.max(...tournamentHistory.map(t => t.prizePool)).toLocaleString('tr-TR')}
+              </div>
+              <div className="text-sm text-gray-300">En Yüksek Ödül</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-400 mb-1">
+                {players.filter(p => p.status === 'active').length}
+              </div>
+              <div className="text-sm text-gray-300">Aktif Oyuncu</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

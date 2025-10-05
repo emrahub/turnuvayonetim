@@ -83,7 +83,16 @@
       "Bash(start cmd /k START-ALL.bat)",
       "Bash(cmd.exe:*)",
       "Bash(start cmd /k yenidenbaslat.bat)",
-      "Bash(if exist output rmdir /s /q output)"
+      "Bash(if exist output rmdir /s /q output)",
+      "WebSearch",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(if exist node_modules.cache rmdir /s /q node_modules.cache)",
+      "Read(//c/**)",
+      "Bash(set PORT=3005)",
+      "Bash(git commit:*)",
+      "Bash(do echo -n \"$page: \")",
+      "Bash(do printf \"%-20s\" \"$page:\")",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

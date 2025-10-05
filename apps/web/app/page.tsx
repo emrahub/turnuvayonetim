@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Clock, Users, Trophy, Settings, ChevronRight, Play, Pause, RotateCcw, Plus, BarChart, Monitor, TrendingUp, Award, Timer, Target } from 'lucide-react'
+import { Clock, Users, Trophy, Settings, ChevronRight, Play, Pause, RotateCcw, Plus, BarChart3, Monitor, TrendingUp, Award, Timer, Target, DollarSign, FileText, Shuffle, History } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,6 +19,11 @@ const PlayerManagement = dynamic(() => import('../components/PlayerManagement'),
 const TournamentClock = dynamic(() => import('../components/TournamentClock'), {
   ssr: false,
   loading: () => <LoadingSpinner text="Turnuva saati yükleniyor..." />
+})
+
+const ICMCalculator = dynamic(() => import('../components/ICMCalculator').then(mod => ({ default: mod.ICMCalculator })), {
+  ssr: false,
+  loading: () => <LoadingSpinner text="ICM hesaplayıcı yükleniyor..." />
 })
 
 export default function Home() {
@@ -72,7 +77,7 @@ export default function Home() {
     // Create demo tournament if none exists
     if (!tournament) {
       createTournament({
-        name: 'TURNUVAYONETIM Demo Tournament',
+        name: 'RangeNex Demo Tournament',
         buyIn: 100,
         maxPlayers: 50,
         startTime: new Date(),
@@ -145,122 +150,195 @@ export default function Home() {
 
   return (
     <ErrorBoundary>
-      <main className="min-h-screen bg-gradient-to-br from-poker-green to-poker-black p-2 sm:p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <header className="bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-            <div className="text-center lg:text-left">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-poker-gold mb-1 sm:mb-2">TURNUVAYONETIM</h1>
-              <p className="text-sm sm:text-base text-gray-300">Profesyonel Poker Turnuva Yönetim Sistemi</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 lg:gap-4">
-              <ConnectionStatus />
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                <button
-                  onClick={() => setShowTournamentModal(true)}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-poker-gold hover:bg-yellow-600 text-black rounded-lg flex items-center gap-2 transition font-semibold text-sm sm:text-base"
-                >
-                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Yeni Turnuva</span>
-                  <span className="sm:hidden">Yeni</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-poker-green hover:bg-green-700 rounded-lg flex items-center gap-2 transition font-semibold text-sm sm:text-base"
-                >
-                  <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                  <span className="sm:hidden">Panel</span>
-                </button>
-                <button
-                  onClick={() => router.push('/seating-demo')}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition font-semibold text-sm sm:text-base"
-                >
-                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Seating Chart</span>
-                  <span className="sm:hidden">Koltuklar</span>
-                </button>
-                <button className="p-2 sm:p-3 bg-white/10 rounded-lg hover:bg-white/20 transition">
-                  <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
+      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-8 pb-8 px-4">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Hero Banner - Modern 2025 Design */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="hero-banner rounded-3xl p-8"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Brand & Tagline */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-brand-500/20 rounded-lg">
+                  <Trophy className="icon-lg text-brand-400" />
+                </div>
+                <h1 className="text-3xl font-bold text-white tracking-tight">Professional Tournament Management</h1>
               </div>
+              <p className="text-slate-400 text-lg">
+                Enterprise-grade poker tournament platform with real-time analytics
+              </p>
+            </div>
+
+            {/* Live Stats & Quick Create */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Connection Status */}
+              <ConnectionStatus />
+
+              {/* Live Stats */}
+              <div className="flex gap-3">
+                <div className="stat-badge">
+                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                  <span className="text-slate-300">
+                    <span className="font-bold text-white">{players.length}</span> Players
+                  </span>
+                </div>
+                {tournament && (
+                  <div className="stat-badge">
+                    <Clock className="icon-sm text-brand-400" />
+                    <span className="text-slate-300">
+                      <span className="font-bold text-white">Live</span> Tournament
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Create Button */}
+              <button
+                onClick={() => setShowTournamentModal(true)}
+                className="btn-primary btn-lg glow-brand-hover"
+              >
+                <Plus className="icon-md" />
+                <span>New Tournament</span>
+              </button>
             </div>
           </div>
-        </header>
+        </motion.div>
 
-        {/* Feature Showcase - Always Visible */}
+        {/* Primary Action Cards - 4 Main Features */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {/* Seating Chart Feature */}
+          {/* Tournament Clock */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm rounded-xl p-6 border border-purple-500/30 cursor-pointer"
-            onClick={() => router.push('/seating-demo')}
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <Trophy className="w-8 h-8 text-purple-400" />
-              <h3 className="text-xl font-bold text-white">Seating Chart</h3>
-            </div>
-            <p className="text-gray-300 text-sm mb-4">
-              Interactive drag-and-drop seating management with real-time table balancing
-            </p>
-            <div className="flex items-center justify-between">
-              <span className="text-purple-400 font-medium">Try Demo →</span>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-xs text-green-400">Ready</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Tournament Clock Feature */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 backdrop-blur-sm rounded-xl p-6 border border-blue-500/30 cursor-pointer"
+            className="action-card-primary"
             onClick={() => setActiveView('clock')}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <Clock className="w-8 h-8 text-blue-400" />
-              <h3 className="text-xl font-bold text-white">Tournament Clock</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-brand-500/20 rounded-xl">
+                <Clock className="icon-xl text-brand-400" />
+              </div>
             </div>
-            <p className="text-gray-300 text-sm mb-4">
-              Professional timer with blind structure management and break scheduling
+            <h3 className="text-xl font-bold text-slate-100 mb-2">Tournament Clock</h3>
+            <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+              Professional timer with blind structure management
             </p>
-            <div className="flex items-center justify-between">
-              <span className="text-blue-400 font-medium">View Clock →</span>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-brand-400 font-semibold text-sm">Launch →</span>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-xs text-green-400">Active</span>
+                <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-success-500">Active</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Player Management Feature */}
+          {/* Player Management */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-sm rounded-xl p-6 border border-green-500/30 cursor-pointer"
+            className="action-card-primary"
             onClick={() => setActiveView('players')}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <Users className="w-8 h-8 text-green-400" />
-              <h3 className="text-xl font-bold text-white">Player Management</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-brand-500/20 rounded-xl">
+                <Users className="icon-xl text-brand-400" />
+              </div>
             </div>
-            <p className="text-gray-300 text-sm mb-4">
-              Complete player registration, chip tracking, and elimination management
+            <h3 className="text-xl font-bold text-slate-100 mb-2">Player Management</h3>
+            <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+              Complete registration, chip tracking & eliminations
             </p>
-            <div className="flex items-center justify-between">
-              <span className="text-green-400 font-medium">Manage Players →</span>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-brand-400 font-semibold text-sm">Manage →</span>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-xs text-green-400">Ready</span>
+                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <span className="text-xs text-success-500">Ready</span>
               </div>
             </div>
           </motion.div>
+
+          {/* ICM Calculator */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="action-card-primary"
+            onClick={() => router.push('/icm')}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-brand-500/20 rounded-xl">
+                <DollarSign className="icon-xl text-brand-400" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-100 mb-2">ICM Calculator</h3>
+            <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+              Professional deal-making & prize distribution
+            </p>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-brand-400 font-semibold text-sm">Calculate →</span>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <span className="text-xs text-success-500">Ready</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Seating Chart */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="action-card-primary"
+            onClick={() => router.push('/seating')}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-brand-500/20 rounded-xl">
+                <Trophy className="icon-xl text-brand-400" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-100 mb-2">Seating Chart</h3>
+            <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+              Drag-and-drop seating with table balancing
+            </p>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-brand-400 font-semibold text-sm">Arrange →</span>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <span className="text-xs text-success-500">Ready</span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Secondary Navigation - Pill Style */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center gap-3 overflow-x-auto pb-2"
+        >
+          <span className="text-sm font-medium text-slate-400 whitespace-nowrap">More Tools:</span>
+          <button onClick={() => router.push('/templates')} className="action-card-secondary whitespace-nowrap">
+            <FileText className="icon-sm" />
+            Templates
+          </button>
+          <button onClick={() => router.push('/pairings')} className="action-card-secondary whitespace-nowrap">
+            <Shuffle className="icon-sm" />
+            Pairings
+          </button>
+          <button onClick={() => router.push('/leaderboard')} className="action-card-secondary whitespace-nowrap">
+            <Award className="icon-sm" />
+            Leaderboard
+          </button>
+          <button onClick={() => router.push('/dashboard')} className="action-card-secondary whitespace-nowrap">
+            <BarChart3 className="icon-sm" />
+            Analytics
+          </button>
+          <button onClick={() => router.push('/hands')} className="action-card-secondary whitespace-nowrap">
+            <History className="icon-sm" />
+            Hand History
+          </button>
         </motion.div>
 
         {/* Tournament Status Bar */}
@@ -268,7 +346,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-black/40 backdrop-blur-sm rounded-xl p-3 sm:p-4 mb-4 sm:mb-6"
+            className="card p-4 mb-6"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
               <div className="flex-1">
@@ -289,10 +367,10 @@ export default function Home() {
                 </div>
               </div>
               <div className="text-center sm:text-right">
-                <div className="text-xl sm:text-2xl font-bold text-poker-gold">
+                <div className="text-xl sm:text-2xl font-bold text-brand-400">
                   {formatTime(tournament.timeRemaining)}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400">
+                <div className="text-xs sm:text-sm text-slate-400">
                   {currentBlind && !currentBlind.isBreak ?
                     `${currentBlind.smallBlind}/${currentBlind.bigBlind}` :
                     currentBlind?.breakName || 'Mola'
@@ -305,28 +383,29 @@ export default function Home() {
 
         {/* View Selector Tabs */}
         <motion.div
-          className="flex justify-center mb-4 sm:mb-6 bg-black/20 backdrop-blur-sm rounded-xl p-2 mx-auto overflow-x-auto"
+          className="flex justify-center mb-6 bg-slate-900/30 backdrop-blur-sm rounded-xl p-2 mx-auto overflow-x-auto border border-slate-700/30"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex space-x-1 sm:space-x-2 min-w-max sm:min-w-0">
+          <div className="flex space-x-2 min-w-max sm:min-w-0">
             {[
               { id: 'clock', label: 'Turnuva Saati', shortLabel: 'Saat', icon: Clock },
               { id: 'players', label: 'Oyuncu Yönetimi', shortLabel: 'Oyuncular', icon: Users },
-              { id: 'statistics', label: 'İstatistikler', shortLabel: 'İstatistik', icon: BarChart },
-              { id: 'tables', label: 'Masalar', shortLabel: 'Masalar', icon: Trophy }
+              { id: 'statistics', label: 'İstatistikler', shortLabel: 'İstatistik', icon: BarChart3 },
+              { id: 'tables', label: 'Masalar', shortLabel: 'Masalar', icon: Trophy },
+              { id: 'icm', label: 'ICM Hesaplayıcı', shortLabel: 'ICM', icon: DollarSign }
             ].map(({ id, label, shortLabel, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveView(id as any)}
-                className={`px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 py-2 rounded-lg font-medium transition-smooth whitespace-nowrap text-sm flex items-center gap-2 ${
                   activeView === id
-                    ? 'bg-poker-gold text-black transform scale-105'
-                    : 'hover:bg-white/10 text-gray-400 hover:text-white'
+                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
+                    : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Icon className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-1 sm:mr-2" />
+                <Icon className="icon-sm" />
                 <span className="hidden sm:inline">{label}</span>
                 <span className="sm:hidden">{shortLabel}</span>
               </button>
@@ -343,10 +422,10 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6"
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             >
               {/* Tournament Clock */}
-              <div className="lg:col-span-2 bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6 lg:p-8">
+              <div className="lg:col-span-2 card p-6 lg:p-8">
                 {tournament ? (
                   <TournamentClock
                     tournamentId={tournament.id}
@@ -371,16 +450,16 @@ export default function Home() {
                       Demo veriler hazırlanıyor. Bir turnuva otomatik olarak oluşturulacak.
                     </p>
                     <div className="flex items-center justify-center gap-2">
-                      <div className="w-2 h-2 bg-poker-gold rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-poker-gold rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      <div className="w-2 h-2 bg-poker-gold rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                      <div className="w-2 h-2 bg-brand-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-brand-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-brand-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                     </div>
                     <div className="mt-6">
                       <button
                         onClick={() => setShowTournamentModal(true)}
-                        className="px-6 py-3 bg-poker-gold hover:bg-yellow-600 text-black rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+                        className="btn-primary mx-auto transition-smooth"
                       >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="icon-md" />
                         Veya Yeni Turnuva Oluştur
                       </button>
                     </div>
@@ -396,37 +475,37 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6"
+                    className="card p-4 sm:p-6"
                   >
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Timer className="w-5 h-5 text-poker-gold" />
+                      <Timer className="icon-md text-brand-400" />
                       Turnuva Kontrolü
                     </h3>
                     <div className="space-y-3">
                       {tournament.status === 'created' && (
                         <button
                           onClick={startTournament}
-                          className="w-full px-4 py-3 bg-poker-green hover:bg-green-700 rounded-lg flex items-center justify-center gap-2 transition font-medium"
+                          className="w-full btn-success transition-smooth"
                         >
-                          <Play className="w-4 h-4" />
+                          <Play className="icon-sm" />
                           Turnuvayı Başlat
                         </button>
                       )}
                       {tournament.status === 'running' && (
                         <button
                           onClick={pauseTournament}
-                          className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-lg flex items-center justify-center gap-2 transition font-medium"
+                          className="w-full btn-warning transition-smooth"
                         >
-                          <Pause className="w-4 h-4" />
+                          <Pause className="icon-sm" />
                           Duraklat
                         </button>
                       )}
                       {tournament.status === 'paused' && (
                         <button
                           onClick={resumeTournament}
-                          className="w-full px-4 py-3 bg-poker-green hover:bg-green-700 rounded-lg flex items-center justify-center gap-2 transition font-medium"
+                          className="w-full btn-success transition-smooth"
                         >
-                          <Play className="w-4 h-4" />
+                          <Play className="icon-sm" />
                           Devam Et
                         </button>
                       )}
@@ -434,14 +513,14 @@ export default function Home() {
                         <button
                           onClick={previousLevel}
                           disabled={!tournament || tournament.currentLevel <= 1}
-                          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition"
+                          className="btn-secondary btn-sm transition-smooth"
                         >
                           Önceki Seviye
                         </button>
                         <button
                           onClick={nextLevel}
                           disabled={!tournament || tournament.currentLevel >= tournament.blindStructure.length}
-                          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition"
+                          className="btn-secondary btn-sm transition-smooth"
                         >
                           Sonraki Seviye
                         </button>
@@ -455,16 +534,16 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-poker-gold" />
+                    <Users className="icon-md text-brand-400" />
                     Oyuncu Durumu
                   </h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Aktif Oyuncular</span>
-                      <span className="text-2xl font-bold text-poker-gold">{statistics.activePlayers}</span>
+                      <span className="text-2xl font-bold text-brand-400">{statistics.activePlayers}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Elenen</span>
@@ -483,16 +562,16 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6"
+                    className="card p-4 sm:p-6"
                   >
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-poker-gold" />
+                      <Trophy className="icon-md text-brand-400" />
                       Ödül Havuzu
                     </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Toplam Havuz</span>
-                        <span className="text-2xl font-bold text-poker-gold">
+                        <span className="text-2xl font-bold text-brand-400">
                           {formatCurrency(tournament.prizePool)}
                         </span>
                       </div>
@@ -515,7 +594,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
                   <h3 className="text-lg font-semibold mb-4">Hızlı İşlemler</h3>
                   <div className="space-y-2">
@@ -524,33 +603,43 @@ export default function Home() {
                         setActiveView('players')
                         setShowPlayerModal(true)
                       }}
-                      className="w-full px-4 py-3 bg-poker-green/20 hover:bg-poker-green/30 rounded-lg flex items-center justify-between transition"
+                      className="w-full px-4 py-3 bg-success-500/20 hover:bg-success-500/30 rounded-lg flex items-center justify-between transition-smooth"
                     >
                       <span className="flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
+                        <Plus className="icon-sm" />
                         Oyuncu Ekle
                       </span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="icon-sm" />
+                    </button>
+                    <button
+                      onClick={() => setActiveView('icm')}
+                      className="w-full px-4 py-3 bg-yellow-600/20 hover:bg-yellow-600/30 rounded-lg flex items-center justify-between transition-smooth"
+                    >
+                      <span className="flex items-center gap-2">
+                        <DollarSign className="icon-sm" />
+                        ICM Hesapla
+                      </span>
+                      <ChevronRight className="icon-sm" />
                     </button>
                     <button
                       onClick={() => setActiveView('statistics')}
-                      className="w-full px-4 py-3 bg-poker-green/20 hover:bg-poker-green/30 rounded-lg flex items-center justify-between transition"
+                      className="w-full px-4 py-3 bg-success-500/20 hover:bg-success-500/30 rounded-lg flex items-center justify-between transition-smooth"
                     >
                       <span className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4" />
+                        <TrendingUp className="icon-sm" />
                         İstatistikleri Görüntüle
                       </span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="icon-sm" />
                     </button>
                     <button
-                      onClick={() => router.push('/seating-demo')}
-                      className="w-full px-4 py-3 bg-purple-600/20 hover:bg-purple-600/30 rounded-lg flex items-center justify-between transition"
+                      onClick={() => router.push('/seating')}
+                      className="w-full px-4 py-3 bg-purple-600/20 hover:bg-purple-600/30 rounded-lg flex items-center justify-between transition-smooth"
                     >
                       <span className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4" />
-                        Koltuk Düzeni Demo
+                        <Trophy className="icon-sm" />
+                        Koltuk Düzeni
                       </span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="icon-sm" />
                     </button>
                   </div>
                 </motion.div>
@@ -567,7 +656,7 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
-              className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+              className="card p-6"
             >
               <ErrorBoundary>
                 <PlayerManagement
@@ -591,32 +680,32 @@ export default function Home() {
               className="space-y-6"
             >
               {/* Header */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6">
+              <div className="card p-6">
                 <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-                  <BarChart className="w-6 h-6 text-poker-gold" />
+                  <BarChart3 className="icon-lg text-brand-400" />
                   Turnuva İstatistikleri
                 </h2>
                 <p className="text-gray-400 mt-2">Detaylı performans analizi ve oyuncu istatistikleri</p>
               </div>
 
               {/* Main Statistics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Chip Leader */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-poker-gold/20"
+                  className="card p-6 border border-brand-400/20"
                 >
-                  <h3 className="text-poker-gold mb-4 flex items-center gap-2">
-                    <Award className="w-5 h-5" />
+                  <h3 className="text-brand-400 mb-4 flex items-center gap-2">
+                    <Award className="icon-md" />
                     Chip Lideri
                   </h3>
                   {statistics.chipLeader ? (
                     <>
                       <div className="text-2xl font-bold text-white">{statistics.chipLeader.name}</div>
                       <div className="text-gray-400">{statistics.chipLeader.chipCount.toLocaleString()} chips</div>
-                      <div className="text-sm text-poker-gold mt-2">
+                      <div className="text-sm text-brand-400 mt-2">
                         Masa {statistics.chipLeader.tableNumber || '-'} / Koltuk {statistics.chipLeader.seatNumber || '-'}
                       </div>
                     </>
@@ -630,9 +719,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
-                  <h3 className="text-poker-gold mb-4">Ortalama Stack</h3>
+                  <h3 className="text-brand-400 mb-4">Ortalama Stack</h3>
                   <div className="text-2xl font-bold text-white">{statistics.averageStack.toLocaleString()}</div>
                   <div className="text-gray-400">{statistics.activePlayers} oyuncu kaldı</div>
                 </motion.div>
@@ -642,9 +731,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
-                  <h3 className="text-poker-gold mb-4">Toplam Chips</h3>
+                  <h3 className="text-brand-400 mb-4">Toplam Chips</h3>
                   <div className="text-2xl font-bold text-white">{statistics.totalChips.toLocaleString()}</div>
                   <div className="text-gray-400">Oyunda</div>
                 </motion.div>
@@ -655,9 +744,9 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6"
+                    className="card p-6"
                   >
-                    <h3 className="text-poker-gold mb-4">Ödül Havuzu</h3>
+                    <h3 className="text-brand-400 mb-4">Ödül Havuzu</h3>
                     <div className="text-2xl font-bold text-white">{formatCurrency(tournament.prizePool)}</div>
                     <div className="text-gray-400">{statistics.totalPlayers} kayıt</div>
                   </motion.div>
@@ -669,9 +758,9 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="bg-black/40 backdrop-blur-sm rounded-xl p-4 sm:p-6"
+                    className="card p-6"
                   >
-                    <h3 className="text-poker-gold mb-4">1. Ödül</h3>
+                    <h3 className="text-brand-400 mb-4">1. Ödül</h3>
                     <div className="text-2xl font-bold text-white">
                       {formatCurrency(tournament.prizeStructure[0].amount)}
                     </div>
@@ -684,9 +773,9 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
-                  <h3 className="text-poker-gold mb-4">Para Kazananlar</h3>
+                  <h3 className="text-brand-400 mb-4">Para Kazananlar</h3>
                   <div className="text-2xl font-bold text-white">{statistics.payoutPositions} Oyuncu</div>
                   <div className="text-gray-400">
                     {statistics.moneyBubblePosition && `Bubble: ${statistics.moneyBubblePosition}. sıra`}
@@ -700,7 +789,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 }}
-                  className="bg-black/40 backdrop-blur-sm rounded-xl p-6"
+                  className="card p-6"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-white">Son Eleneler</h3>
                   <div className="space-y-3">
@@ -731,6 +820,56 @@ export default function Home() {
             </motion.div>
           )}
 
+          {/* ICM Calculator View */}
+          {activeView === 'icm' && (
+            <motion.div
+              key="icm"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="card p-6"
+            >
+              <ErrorBoundary>
+                {players.length > 0 && tournament ? (
+                  <ICMCalculator
+                    players={players.filter(p => p.status === 'active').map(p => ({
+                      id: p.id,
+                      name: p.name,
+                      chips: p.chipCount
+                    }))}
+                    prizePool={tournament.prizePool}
+                    onDealProposal={(results) => {
+                      console.log('ICM Deal Proposal:', results);
+                      alert(`ICM Anlaşması Önerisi\n\n${results.map((r, i) =>
+                        `${i + 1}. ${r.playerName}: ${new Intl.NumberFormat('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY'
+                        }).format(r.equity)}`
+                      ).join('\n')}`);
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">💰</div>
+                    <h3 className="text-2xl font-bold text-white mb-3">
+                      ICM Hesaplayıcı
+                    </h3>
+                    <p className="text-gray-400 mb-6">
+                      ICM hesaplamalarını görmek için en az 2 aktif oyuncu gerekli
+                    </p>
+                    <button
+                      onClick={() => setActiveView('players')}
+                      className="btn-primary transition-smooth"
+                    >
+                      Oyuncu Ekle
+                    </button>
+                  </div>
+                )}
+              </ErrorBoundary>
+            </motion.div>
+          )}
+
           {/* Tables View */}
           {activeView === 'tables' && (
             <motion.div
@@ -741,9 +880,9 @@ export default function Home() {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6">
+              <div className="card p-6">
                 <h2 className="text-2xl font-semibold text-white flex items-center gap-2 mb-4">
-                  <Trophy className="w-6 h-6 text-poker-gold" />
+                  <Trophy className="icon-lg text-brand-400" />
                   Masa Yönetimi & Koltuk Düzeni
                 </h2>
                 <p className="text-gray-400 mb-6">Masaları yönetin, oyuncuları oturtun ve gerçek zamanlı denge sağlayın</p>
@@ -752,11 +891,11 @@ export default function Home() {
                   {/* Quick Access to Seating Demo */}
                   <motion.div
                     whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-sm rounded-xl p-6 border border-purple-500/30 cursor-pointer"
-                    onClick={() => router.push('/seating-demo')}
+                    className="card-hover p-6 border border-purple-500/30 cursor-pointer transition-smooth hover-lift"
+                    onClick={() => router.push('/seating')}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <Trophy className="w-10 h-10 text-purple-400" />
+                      <Trophy className="icon-2xl text-purple-400" />
                       <div>
                         <h3 className="text-xl font-bold text-white">Interaktif Koltuk Düzeni</h3>
                         <p className="text-purple-300 text-sm">Drag & Drop ile masa yönetimi</p>
@@ -787,7 +926,7 @@ export default function Home() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Aktif Masalar</span>
-                        <span className="text-2xl font-bold text-poker-gold">3</span>
+                        <span className="text-2xl font-bold text-brand-400">3</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Toplam Koltuk</span>
@@ -804,7 +943,7 @@ export default function Home() {
                       <div className="pt-2 border-t border-gray-700">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-400">Doluluk Oranı</span>
-                          <span className="text-lg font-medium text-poker-gold">67%</span>
+                          <span className="text-lg font-medium text-brand-400">67%</span>
                         </div>
                       </div>
                     </div>
@@ -813,15 +952,15 @@ export default function Home() {
               </div>
 
               {/* Quick Management Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push('/seating-demo')}
-                  className="bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 rounded-xl p-6 text-left transition-all"
+                  onClick={() => router.push('/seating')}
+                  className="card-hover p-6 text-left transition-smooth hover-lift border border-green-500/30"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <Plus className="w-6 h-6 text-green-400" />
+                    <Plus className="icon-lg text-green-400" />
                     <h3 className="text-lg font-semibold text-white">Yeni Masa Ekle</h3>
                   </div>
                   <p className="text-gray-400 text-sm">Turnuvaya yeni masa ve koltuklar ekleyin</p>
@@ -830,11 +969,11 @@ export default function Home() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push('/seating-demo')}
-                  className="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-xl p-6 text-left transition-all"
+                  onClick={() => router.push('/seating')}
+                  className="card-hover p-6 text-left transition-smooth hover-lift border border-blue-500/30"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <RotateCcw className="w-6 h-6 text-blue-400" />
+                    <RotateCcw className="icon-lg text-blue-400" />
                     <h3 className="text-lg font-semibold text-white">Masaları Dengele</h3>
                   </div>
                   <p className="text-gray-400 text-sm">Otomatik masa dengeleme algoritması</p>
@@ -843,11 +982,11 @@ export default function Home() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push('/seating-demo')}
-                  className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-xl p-6 text-left transition-all"
+                  onClick={() => router.push('/seating')}
+                  className="card-hover p-6 text-left transition-smooth hover-lift border border-purple-500/30"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <Target className="w-6 h-6 text-purple-400" />
+                    <Target className="icon-lg text-purple-400" />
                     <h3 className="text-lg font-semibold text-white">Koltuk Ata</h3>
                   </div>
                   <p className="text-gray-400 text-sm">Oyuncuları optimum konumlara yerleştirin</p>
@@ -855,12 +994,12 @@ export default function Home() {
               </div>
 
               {/* Demo Table Preview */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6">
+              <div className="card p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-poker-gold" />
+                  <Trophy className="icon-md text-brand-400" />
                   Masa Önizlemesi
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {[1, 2, 3].map((tableNum) => (
                     <div key={tableNum} className="bg-black/60 rounded-xl p-4 border border-gray-700">
                       <div className="flex justify-between items-center mb-3">
@@ -888,8 +1027,8 @@ export default function Home() {
                         ))}
                       </div>
                       <button
-                        onClick={() => router.push('/seating-demo')}
-                        className="w-full text-xs px-3 py-2 bg-poker-gold/20 hover:bg-poker-gold/30 text-poker-gold rounded transition"
+                        onClick={() => router.push('/seating')}
+                        className="w-full text-xs px-3 py-2 bg-brand-400/20 hover:bg-brand-400/30 text-brand-400 rounded transition-smooth"
                       >
                         Masa Detayları
                       </button>

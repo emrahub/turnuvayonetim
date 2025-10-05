@@ -16,15 +16,20 @@ npm install
 
 # 2. Start all services (Docker + Dev servers)
 npm run docker:up    # Start PostgreSQL + Redis
-START-ALL.bat        # Windows: Start all dev servers
-# or
-./START-ALL.ps1      # PowerShell
+
+# 3. Start development servers (see STARTALL.md for details)
+# Use Claude Code or run these commands in background:
+cd apps/ws && set WS_PORT=3003 && npm run dev
+cd apps/backend && set API_PORT=4000 && set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tournament && npm run dev
+cd apps/web && set PORT=3005 && set NEXT_PUBLIC_APP_URL=http://localhost:3005 && npm run dev
 ```
 
-**3. Open your browser:**
+**4. Open your browser:**
 - 🎯 **Frontend**: http://localhost:3005
 - 🔌 **Backend API**: http://localhost:4000
 - 📡 **WebSocket**: ws://localhost:3003
+
+> 💡 **Note**: For detailed startup instructions, see [STARTALL.md](STARTALL.md)
 
 ---
 
@@ -132,16 +137,14 @@ npm run db:push
 ### Development Commands
 
 ```bash
-# Start all development servers
-START-ALL.bat        # Windows batch
-./START-ALL.ps1      # PowerShell
-./yenidenbaslat.bat  # Restart with port cleanup
+# Start all development servers (see STARTALL.md for full details)
+# Run these in background mode via Claude Code:
+cd apps/ws && set WS_PORT=3003 && npm run dev         # WebSocket Server
+cd apps/backend && set API_PORT=4000 && npm run dev   # Backend API
+cd apps/web && set PORT=3005 && npm run dev           # Frontend
 
-# Start individual services
+# Or start all at once
 npm run dev          # All services (via Turbo)
-cd apps/web && npm run dev         # Frontend only
-cd apps/backend && npm run dev     # Backend only
-cd apps/ws && npm run dev          # WebSocket only
 
 # Database commands
 npm run db:generate  # Generate Prisma client
@@ -210,9 +213,10 @@ cp .env.local.example .env.local
 ```
 
 ### Port Conflicts?
-If ports are in use, run the restart script which cleans ports first:
+If ports are in use, kill Node processes and restart:
 ```bash
-yenidenbaslat.bat    # Windows
+taskkill /F /IM node.exe    # Kill all Node processes
+# Then restart services as shown in STARTALL.md
 ```
 
 ---
@@ -222,7 +226,8 @@ yenidenbaslat.bat    # Windows
 **Services won't start?**
 - Check Docker is running: `docker ps`
 - Check ports are free: `netstat -ano | findstr "3003 4000 3005"`
-- Try restart script: `yenidenbaslat.bat`
+- Kill Node processes: `taskkill /F /IM node.exe`
+- See [STARTALL.md](STARTALL.md) for detailed startup guide
 
 **Database connection failed?**
 - Ensure Docker containers are running

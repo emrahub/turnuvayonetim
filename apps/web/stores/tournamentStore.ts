@@ -203,26 +203,53 @@ export const useTournamentStore = create<TournamentStore>()(
       }
 
       const socket = io(url, {
-        transports: ['websocket'], // Sadece WebSocket kullan, polling'i devre dışı bırak
-        upgrade: false, // Polling'den WebSocket'e upgrade'i devre dışı bırak
+        transports: ['websocket', 'polling'], // Hem WebSocket hem polling desteği
+        upgrade: true, // Polling'den WebSocket'e upgrade aktif
         auth: {
           token: typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
         },
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10, // Daha fazla deneme
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        timeout: 20000
+        timeout: 20000,
+        forceNew: false, // Mevcut bağlantıyı kullan
+        autoConnect: true, // Otomatik bağlan
+        withCredentials: false,
+        path: '/socket.io/' // Explicit path
       });
 
       socket.on('connect', () => {
         set({ isConnected: true, error: null });
-        console.log('Tournament socket connected');
+        console.log('✅ Tournament socket connected:', socket.id);
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', (reason) => {
         set({ isConnected: false });
-        console.log('Tournament socket disconnected');
+        console.log('❌ Tournament socket disconnected:', reason);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('🔴 Socket connection error:', error.message);
+        set({ error: error.message, isConnected: false });
+      });
+
+      socket.on('reconnect', (attemptNumber) => {
+        console.log('🔄 Socket reconnected after', attemptNumber, 'attempts');
+        set({ isConnected: true, error: null });
+      });
+
+      socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log('🔄 Reconnection attempt', attemptNumber);
+      });
+
+      socket.on('reconnect_error', (error) => {
+        console.error('🔴 Reconnection error:', error.message);
+      });
+
+      socket.on('reconnect_failed', () => {
+        console.error('❌ Reconnection failed - max attempts reached');
+        set({ error: 'Could not reconnect to server', isConnected: false });
       });
 
       socket.on('tournament:updated', (tournament: Tournament) => {

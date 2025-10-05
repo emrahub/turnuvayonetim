@@ -39,69 +39,36 @@ const SeatComponent: React.FC<SeatComponentProps> = React.memo(({
   });
 
   const getSeatPosition = useMemo(() => (seatNumber: number, maxSeats: number) => {
-    // Calculate position around the table (elliptical layout) with proper collision prevention
-    const angle = ((seatNumber - 1) / maxSeats) * 2 * Math.PI - Math.PI / 2;
+    // Profesyonel poker masası seat pozisyonlaması
+    // Seat'ler masa kenarında, yarısı içerde yarısı dışarda
 
-    // Seat dimensions and spacing requirements
-    const seatSize = 70; // Reduced from 80px to 70px for better fit
-    const minimumSpacing = 20; // Minimum spacing between seat edges
-    const effectiveSeatSize = seatSize + minimumSpacing;
+    // Masa boyutları
+    const tableWidth = 520;
+    const tableHeight = 320;
 
-    // Calculate minimum required radius based on seat count and spacing
-    const circumference = maxSeats * effectiveSeatSize;
-    const minRadius = circumference / (2 * Math.PI);
+    // Masa merkezi - sol üst köşeye kaydırmak için offset ekle
+    const offsetX = -30;  // Sol tarafa 30px kaydır
+    const offsetY = -20;  // Yukarı 20px kaydır
+    const centerX = tableWidth / 2 + offsetX;
+    const centerY = tableHeight / 2 + offsetY;
 
-    // Set radius based on table type with proper mathematical spacing
-    let radiusX: number, radiusY: number;
+    // Elips yarıçapları - seat'ler masa kenarına oturacak
+    // Masa boyutunun %40'ı kadar yarıçap
+    const radiusX = tableWidth * 0.40;   // 520 * 0.40 = 208px
+    const radiusY = tableHeight * 0.40;  // 320 * 0.40 = 128px
 
-    switch (maxSeats) {
-      case 2: // Heads-up
-        radiusX = Math.max(120, minRadius);
-        radiusY = Math.max(60, minRadius * 0.5);
-        break;
-      case 6: // 6-max
-        radiusX = Math.max(180, minRadius);
-        radiusY = Math.max(120, minRadius * 0.67);
-        break;
-      case 9: // 9-max
-        radiusX = Math.max(220, minRadius);
-        radiusY = Math.max(140, minRadius * 0.64);
-        break;
-      case 10: // 10-max
-        radiusX = Math.max(240, minRadius);
-        radiusY = Math.max(150, minRadius * 0.62);
-        break;
-      default:
-        radiusX = Math.max(200, minRadius);
-        radiusY = Math.max(130, minRadius * 0.65);
-    }
+    // Açı hesaplama - üstten başla (BTN/Dealer pozisyonu)
+    const startAngle = -Math.PI / 2;
+    const angleStep = (2 * Math.PI) / maxSeats;
+    const angle = startAngle + (angleStep * (seatNumber - 1));
 
-    // Calculate precise positioning with collision avoidance
-    const x = Math.cos(angle) * radiusX;
-    const y = Math.sin(angle) * radiusY;
-
-    // Ensure seats don't overlap by checking adjacent seat distances
-    const adjacentAngle = (2 * Math.PI) / maxSeats;
-    const adjacentX = Math.cos(angle + adjacentAngle) * radiusX;
-    const adjacentY = Math.sin(angle + adjacentAngle) * radiusY;
-    const distance = Math.sqrt(Math.pow(x - adjacentX, 2) + Math.pow(y - adjacentY, 2));
-
-    // If distance is too small, increase radius proportionally
-    if (distance < effectiveSeatSize) {
-      const scaleFactor = effectiveSeatSize / distance;
-      const adjustedRadiusX = radiusX * scaleFactor;
-      const adjustedRadiusY = radiusY * scaleFactor;
-
-      return {
-        left: `calc(50% + ${Math.cos(angle) * adjustedRadiusX}px)`,
-        top: `calc(50% + ${Math.sin(angle) * adjustedRadiusY}px)`,
-        transform: 'translate(-50%, -50%)'
-      };
-    }
+    // Eliptik koordinatlar
+    const x = centerX + radiusX * Math.cos(angle);
+    const y = centerY + radiusY * Math.sin(angle);
 
     return {
-      left: `calc(50% + ${x}px)`,
-      top: `calc(50% + ${y}px)`,
+      left: `${x}px`,
+      top: `${y}px`,
       transform: 'translate(-50%, -50%)'
     };
   }, []);
@@ -125,21 +92,25 @@ const SeatComponent: React.FC<SeatComponentProps> = React.memo(({
     <motion.div
       ref={drop as any}
       className={`
-        absolute w-[70px] h-[70px] rounded-full border-3 cursor-pointer transition-all duration-200
+        absolute rounded-full cursor-pointer transition-all duration-300
         ${seat.isEmpty
-          ? `border-dashed border-amber-400/50 hover:border-poker-gold
-             ${canDrop ? 'border-green-400 bg-green-400/20 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : ''}
-             ${isOver && canDrop ? 'border-green-500 bg-green-500/30 scale-110 shadow-[0_0_20px_rgba(34,197,94,0.8)]' : ''}
-             bg-gradient-to-br from-amber-900/30 to-amber-800/20`
-          : `border-solid ${isSelected ? 'border-poker-gold' : 'border-amber-600'}
-             hover:border-amber-400 bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800
-             shadow-[0_0_10px_rgba(0,0,0,0.8)]`
+          ? `border-2 border-dashed border-gray-500 hover:border-green-400
+             ${canDrop ? 'border-green-400 bg-green-400/20 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-gray-800/50'}
+             ${isOver && canDrop ? 'border-green-500 bg-green-500/30 scale-110 shadow-[0_0_20px_rgba(34,197,94,0.8)]' : ''}`
+          : `border-3 border-white
+             ${seat.isDealer ? 'bg-gradient-to-b from-[#ffd700] to-[#f0c420]' : 'bg-gradient-to-b from-[#2c5aa0] to-[#1e3d6f]'}
+             shadow-[0_5px_20px_rgba(0,0,0,0.7)]
+             hover:scale-110 hover:z-10`
         }
-        ${seat.isDealer ? 'ring-2 ring-yellow-400 ring-offset-1 ring-offset-gray-900/50' : ''}
-        ${seat.isSmallBlind && !seat.isDealer ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-gray-900/50' : ''}
-        ${seat.isBigBlind && !seat.isDealer ? 'ring-2 ring-red-400 ring-offset-1 ring-offset-gray-900/50' : ''}
       `}
-      style={getSeatPosition(seat.number, table.maxSeats)}
+      style={{
+        width: '55px',
+        height: '55px',
+        ...getSeatPosition(seat.number, table.maxSeats),
+        ...(seat.isDealer && !seat.isEmpty ? {
+          boxShadow: '0 5px 25px rgba(0,0,0,0.7), 0 0 40px rgba(255,215,0,0.5), inset 0 -2px 5px rgba(0,0,0,0.3)'
+        } : {})
+      }}
       onClick={() => onSeatClick(table, seat)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -149,20 +120,19 @@ const SeatComponent: React.FC<SeatComponentProps> = React.memo(({
     >
       {seat.isEmpty ? (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="text-amber-400/70 text-sm font-bold">
+          <div className="text-gray-400 text-xs font-medium">
             {seat.number}
           </div>
         </div>
       ) : seat.player ? (
-        <div className="w-full h-full relative">
-          {/* Player Avatar */}
-          <div className={`w-full h-full rounded-full flex items-center justify-center text-white text-sm font-bold relative border-2 border-white/20 ${getStatusColor(seat.player)}`}>
+        <div className="w-full h-full flex flex-col items-center justify-center">
+          <div className={`text-xs font-bold ${seat.isDealer ? 'text-gray-900' : 'text-white'}`} style={{
+            textShadow: seat.isDealer ? '0 1px 2px rgba(255,255,255,0.5)' : '0 1px 3px rgba(0,0,0,0.7)'
+          }}>
             {seat.player.name.substring(0, 2).toUpperCase()}
-
-            {/* Chip Leader Crown - Better positioning */}
-            {seat.player.isChipLeader && (
-              <Crown className="absolute -top-2 -right-2 w-4 h-4 text-yellow-400 drop-shadow-lg z-10" />
-            )}
+          </div>
+          <div className={`text-[10px] ${seat.isDealer ? 'text-gray-800/80' : 'text-white/60'}`}>
+            {seat.player.name.substring(0, 5)}
           </div>
 
           {/* Dealer Button - Improved positioning and styling */}
@@ -212,6 +182,8 @@ const SeatComponent: React.FC<SeatComponentProps> = React.memo(({
   );
 });
 
+SeatComponent.displayName = 'SeatComponent';
+
 export const TableCard: React.FC<TableCardProps> = ({
   table,
   onPlayerDrop,
@@ -254,96 +226,84 @@ export const TableCard: React.FC<TableCardProps> = ({
   }, []);
 
   return (
-    <motion.div
-      className={`
-        relative rounded-[50%] border-4 border-amber-600 p-8 transition-all duration-300 min-h-[420px] min-w-[520px]
-        bg-gradient-to-br from-green-700 via-green-800 to-green-900
-        shadow-[inset_0_0_30px_rgba(0,0,0,0.5),0_10px_25px_rgba(0,0,0,0.3)]
-        ${getTableStatusColor(table.status)}
-        ${isSelected ? 'ring-4 ring-poker-gold ring-offset-4 ring-offset-gray-900' : ''}
-        ${className}
-      `}
-      style={{
-        background: `
-          radial-gradient(ellipse 80% 60% at center,
-            rgba(34, 197, 94, 0.95) 0%,
-            rgba(21, 128, 61, 0.95) 40%,
-            rgba(20, 83, 45, 0.95) 80%,
-            rgba(15, 23, 42, 0.95) 100%
-          ),
-          repeating-conic-gradient(from 0deg at center,
-            transparent 0deg,
-            rgba(34, 197, 94, 0.1) 2deg,
-            transparent 4deg
-          )
-        `,
-        aspectRatio: '1.3/1'
-      }}
-      whileHover={{ scale: 1.02 }}
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      {/* Table Header - Minimalist */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-r from-amber-600/80 to-amber-500/80 rounded-lg px-3 py-1 backdrop-blur-sm border border-amber-400/50">
-            <span className="text-white font-bold text-sm drop-shadow-md">
-              Table {table.number}
-            </span>
-          </div>
-          <div className={`
-            px-2 py-1 rounded-full text-xs font-medium border backdrop-blur-sm
-            ${table.status === 'active' ? 'bg-green-500/80 text-white border-green-400' :
-              table.status === 'breaking' ? 'bg-yellow-500/80 text-black border-yellow-400' :
-              table.status === 'broken' ? 'bg-red-500/80 text-white border-red-400' :
-              'bg-gray-500/80 text-white border-gray-400'
-            }
-          `}>
-            {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
-          </div>
+    <div className="relative">
+      {/* Table Header - Outside the table, at the top */}
+      <div className="absolute -top-10 left-0 z-10 flex items-center gap-2">
+        <div className="bg-gradient-to-r from-amber-600 to-amber-500 rounded-md px-3 py-1">
+          <span className="text-white font-bold text-sm">
+            Table {table.number}
+          </span>
+        </div>
+        <div className={`
+          px-2 py-1 rounded-md text-xs font-medium
+          ${table.status === 'active' ? 'bg-green-500 text-white' :
+            table.status === 'breaking' ? 'bg-yellow-500 text-black' :
+            table.status === 'broken' ? 'bg-red-500 text-white' :
+            'bg-gray-500 text-white'
+          }
+        `}>
+          {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
         </div>
 
         {showControls && (
           <motion.button
-            className="bg-black/60 hover:bg-black/80 rounded-lg p-2 text-gray-400 hover:text-white transition-colors backdrop-blur-sm border border-gray-600/50"
+            className="bg-black/60 hover:bg-black/80 rounded-md p-1.5 text-gray-400 hover:text-white transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical className="w-3 h-3" />
           </motion.button>
         )}
       </div>
 
+      {/* Main Table */}
+      <motion.div
+        className={`
+          relative transition-all duration-300
+          ${getTableStatusColor(table.status)}
+          ${isSelected ? 'ring-4 ring-poker-gold ring-offset-4 ring-offset-gray-900' : ''}
+          ${className}
+        `}
+        style={{
+          width: '520px',
+          height: '320px',
+          background: `radial-gradient(ellipse at center,
+            #2d5016 0%,
+            #1a3009 40%,
+            #0d1805 100%)`,
+          borderRadius: '50%',
+          boxShadow: `
+            inset 0 0 80px rgba(0,0,0,0.8),
+            0 10px 40px rgba(0,0,0,0.9),
+            0 0 100px rgba(0,0,0,0.5)`,
+          border: '8px solid',
+          borderImage: 'linear-gradient(45deg, #8b6914, #cdaa3d, #8b6914, #cdaa3d) 1'
+        }}
+        whileHover={{ scale: 1.02 }}
+        layout
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+
       {/* Table Center with Stats */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="bg-gradient-to-br from-slate-900/95 to-slate-800/95 rounded-full p-6 text-center border-2 border-amber-500/50 shadow-[0_0_20px_rgba(0,0,0,0.8)] backdrop-blur-sm max-w-[140px] max-h-[140px] min-w-[120px] min-h-[120px] flex flex-col justify-center">
-          <div className="text-poker-gold font-bold text-sm mb-1">
-            T{table.number}
+        <div className="bg-black/50 rounded-[12px] px-6 py-3 text-center border-2 border-amber-500/30 backdrop-blur-[5px] w-[160px] h-[90px] flex flex-col justify-center">
+          <h2 className="text-lg text-poker-gold font-bold tracking-[2px] mb-1" style={{
+            textShadow: '0 0 15px rgba(255,215,0,0.5), 0 0 30px rgba(255,215,0,0.3)'
+          }}>
+            TABLE {table.number}
+          </h2>
+          <div className="text-white font-bold text-sm">
+            {occupiedSeats.length > 0 ? (
+              <>POT: {formatCurrency(averageStack)}</>
+            ) : (
+              <span className="text-gray-400">Waiting...</span>
+            )}
           </div>
-
-          {occupiedSeats.length > 0 ? (
-            <div className="space-y-1">
-              <div className="text-white text-xs">
-                <span className="text-poker-gold font-medium text-sm">
-                  {formatCurrency(averageStack)}
-                </span>
-              </div>
-              <div className="text-gray-300 text-xs">
-                {occupiedSeats.length}/{table.maxSeats} players
-              </div>
-              {table.bigBlindOrbits && (
-                <div className="text-gray-400 text-xs">
-                  {table.bigBlindOrbits} orbits
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-gray-400 text-xs">
-              Waiting
-            </div>
-          )}
+          <div className="text-gray-300 text-xs mt-0.5">
+            {occupiedSeats.length}/{table.maxSeats} players
+          </div>
 
           {/* Action indicators */}
           {table.status === 'breaking' && (
@@ -406,7 +366,8 @@ export const TableCard: React.FC<TableCardProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

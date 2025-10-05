@@ -5,6 +5,116 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, Clock, Users, DollarSign, Trophy } from 'lucide-react';
 import { useTournamentStore, BlindLevel } from '../stores/tournamentStore';
 
+// Tournament templates - inline to avoid module resolution issues
+interface TournamentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  type: 'turbo' | 'regular' | 'deep-stack' | 'hyper-turbo' | 'slow';
+  startingStack: number;
+  levelDuration: number;
+  blindLevels: Array<{
+    level: number;
+    smallBlind: number;
+    bigBlind: number;
+    ante: number;
+    duration: number;
+    isBreak: boolean;
+    breakName?: string;
+  }>;
+  recommended: {
+    minPlayers: number;
+    maxPlayers: number;
+    estimatedDuration: string;
+  };
+}
+
+// Frontend templates (inline to avoid import issues)
+const ALL_TEMPLATES: TournamentTemplate[] = [
+  {
+    id: 'hyper-turbo',
+    name: 'Hyper Turbo',
+    description: 'Çok hızlı turnuva - 3 dakikalık seviyeler',
+    type: 'hyper-turbo',
+    startingStack: 3000,
+    levelDuration: 3,
+    blindLevels: [
+      { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 3, isBreak: false },
+      { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 3, isBreak: false },
+      { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 3, isBreak: false },
+      { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 3, isBreak: false },
+      { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 3, isBreak: false },
+      { level: 6, smallBlind: 0, bigBlind: 0, ante: 0, duration: 5, isBreak: true, breakName: 'Kısa Mola' },
+    ],
+    recommended: { minPlayers: 10, maxPlayers: 50, estimatedDuration: '1-2 saat' },
+  },
+  {
+    id: 'turbo',
+    name: 'Turbo',
+    description: 'Hızlı tempolu turnuva - 5 dakikalık seviyeler',
+    type: 'turbo',
+    startingStack: 5000,
+    levelDuration: 5,
+    blindLevels: [
+      { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 5, isBreak: false },
+      { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 5, isBreak: false },
+      { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 5, isBreak: false },
+      { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 5, isBreak: false },
+      { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 5, isBreak: false },
+      { level: 6, smallBlind: 0, bigBlind: 0, ante: 0, duration: 10, isBreak: true, breakName: 'Mola - 10 Dakika' },
+    ],
+    recommended: { minPlayers: 20, maxPlayers: 100, estimatedDuration: '2-3 saat' },
+  },
+  {
+    id: 'regular',
+    name: 'Regular',
+    description: 'Standart turnuva yapısı - 20 dakikalık seviyeler',
+    type: 'regular',
+    startingStack: 10000,
+    levelDuration: 20,
+    blindLevels: [
+      { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 20, isBreak: false },
+      { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 20, isBreak: false },
+      { level: 3, smallBlind: 75, bigBlind: 150, ante: 25, duration: 20, isBreak: false },
+      { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 20, isBreak: false },
+      { level: 5, smallBlind: 150, bigBlind: 300, ante: 50, duration: 20, isBreak: false },
+      { level: 6, smallBlind: 0, bigBlind: 0, ante: 0, duration: 15, isBreak: true, breakName: 'Mola - 15 Dakika' },
+    ],
+    recommended: { minPlayers: 50, maxPlayers: 200, estimatedDuration: '4-6 saat' },
+  },
+  {
+    id: 'deep-stack',
+    name: 'Deep Stack',
+    description: 'Derin stack yapısı - 30 dakikalık seviyeler',
+    type: 'deep-stack',
+    startingStack: 20000,
+    levelDuration: 30,
+    blindLevels: [
+      { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 30, isBreak: false },
+      { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 30, isBreak: false },
+      { level: 3, smallBlind: 75, bigBlind: 150, ante: 0, duration: 30, isBreak: false },
+      { level: 4, smallBlind: 100, bigBlind: 200, ante: 25, duration: 30, isBreak: false },
+      { level: 5, smallBlind: 0, bigBlind: 0, ante: 0, duration: 20, isBreak: true, breakName: 'Mola - 20 Dakika' },
+    ],
+    recommended: { minPlayers: 50, maxPlayers: 300, estimatedDuration: '6-8 saat' },
+  },
+  {
+    id: 'slow',
+    name: 'Slow Structure',
+    description: 'Çok yavaş yapı - 45 dakikalık seviyeler',
+    type: 'slow',
+    startingStack: 30000,
+    levelDuration: 45,
+    blindLevels: [
+      { level: 1, smallBlind: 25, bigBlind: 50, ante: 0, duration: 45, isBreak: false },
+      { level: 2, smallBlind: 50, bigBlind: 100, ante: 0, duration: 45, isBreak: false },
+      { level: 3, smallBlind: 75, bigBlind: 150, ante: 0, duration: 45, isBreak: false },
+      { level: 4, smallBlind: 0, bigBlind: 0, ante: 0, duration: 20, isBreak: true, breakName: 'Mola - 20 Dakika' },
+    ],
+    recommended: { minPlayers: 100, maxPlayers: 500, estimatedDuration: '8+ saat' },
+  },
+];
+
 interface TournamentCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,6 +157,7 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
   const [blindStructure, setBlindStructure] = useState<BlindLevel[]>(PRESET_STRUCTURES.normal);
   const [activeTab, setActiveTab] = useState<'basic' | 'structure' | 'settings'>('basic');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -148,6 +259,28 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
 
   const loadPreset = (preset: keyof typeof PRESET_STRUCTURES) => {
     setBlindStructure(PRESET_STRUCTURES[preset]);
+  };
+
+  const loadTemplate = (template: TournamentTemplate) => {
+    setSelectedTemplate(template.id);
+    // Convert template blind levels to modal format
+    const convertedLevels: BlindLevel[] = template.blindLevels.map((level, index) => ({
+      idx: index,
+      smallBlind: level.smallBlind,
+      bigBlind: level.bigBlind,
+      ante: level.ante,
+      durationSeconds: level.duration * 60, // convert minutes to seconds
+      isBreak: level.isBreak,
+      breakName: level.breakName
+    }));
+    setBlindStructure(convertedLevels);
+    // Also update starting stack if user hasn't customized it
+    if (formData.name === '' || formData.name === DEFAULT_TOURNAMENT.name) {
+      setFormData(prev => ({
+        ...prev,
+        name: `${template.name} Turnuvası`
+      }));
+    }
   };
 
   return (
@@ -273,31 +406,56 @@ export function TournamentCreationModal({ isOpen, onClose }: TournamentCreationM
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Hazır Yapıları Yükle
+                        Turnuva Şablonları
                       </label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => loadPreset('turbo')}
-                          className="px-3 py-1 bg-poker-red/20 text-poker-red rounded text-sm hover:bg-poker-red/30 transition-colors"
-                        >
-                          Turbo (10dk)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => loadPreset('normal')}
-                          className="px-3 py-1 bg-poker-green/20 text-poker-green rounded text-sm hover:bg-poker-green/30 transition-colors"
-                        >
-                          Normal (15dk)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => loadPreset('deep')}
-                          className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-sm hover:bg-blue-500/30 transition-colors"
-                        >
-                          Derin (20dk)
-                        </button>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {ALL_TEMPLATES.map((template) => {
+                          const isSelected = selectedTemplate === template.id;
+                          const typeColors = {
+                            'hyper-turbo': 'from-red-600/20 to-orange-600/20 border-red-500/30 text-red-400',
+                            'turbo': 'from-orange-600/20 to-yellow-600/20 border-orange-500/30 text-orange-400',
+                            'regular': 'from-green-600/20 to-emerald-600/20 border-green-500/30 text-green-400',
+                            'deep-stack': 'from-blue-600/20 to-cyan-600/20 border-blue-500/30 text-blue-400',
+                            'slow': 'from-purple-600/20 to-pink-600/20 border-purple-500/30 text-purple-400'
+                          };
+                          const typeIcons = {
+                            'hyper-turbo': '🚀',
+                            'turbo': '⚡',
+                            'regular': '📊',
+                            'deep-stack': '🎯',
+                            'slow': '🐢'
+                          };
+                          return (
+                            <button
+                              key={template.id}
+                              type="button"
+                              onClick={() => loadTemplate(template)}
+                              className={`
+                                p-3 rounded-lg text-left transition-all
+                                bg-gradient-to-br ${typeColors[template.type]}
+                                border-2 ${isSelected ? 'border-poker-gold ring-2 ring-poker-gold/50' : ''}
+                                hover:scale-105
+                              `}
+                            >
+                              <div className="text-2xl mb-1">{typeIcons[template.type]}</div>
+                              <div className="font-semibold text-white text-sm mb-1">
+                                {template.name}
+                              </div>
+                              <div className="text-xs opacity-80">
+                                {template.levelDuration}dk seviyeler
+                              </div>
+                              {isSelected && (
+                                <div className="mt-2 text-xs text-poker-gold font-medium">
+                                  ✓ Seçili
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Şablonu seçtikten sonra istediğiniz gibi özelleştirebilirsiniz
+                      </p>
                     </div>
 
                     <div className="space-y-3">

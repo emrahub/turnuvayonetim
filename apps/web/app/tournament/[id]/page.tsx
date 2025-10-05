@@ -253,45 +253,45 @@ export default function TournamentPage() {
   const eliminatedPlayers = players.filter(p => p.status === 'ELIMINATED');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-6">
+    <div className="min-h-screen bg-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">
-                🏆 {tournament.name}
+                {tournament.name}
               </h1>
-              <p className="text-green-200">
-                Tournament ID: {tournament.id} • Status: {tournament.status}
+              <p className="text-slate-400">
+                Tournament ID: {tournament.id} • Status: <span className="badge-brand">{tournament.status}</span>
               </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-yellow-400">
+              <div className="text-3xl font-bold text-brand-400">
                 {formatCurrency(tournament.prizePool)}
               </div>
-              <div className="text-white/80">Prize Pool</div>
+              <div className="text-slate-400">Prize Pool</div>
             </div>
           </div>
         </div>
 
         {/* Stats Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div className="card p-4 hover-lift">
             <div className="text-2xl font-bold text-white">{activePlayers.length}</div>
-            <div className="text-white/80">Active Players</div>
+            <div className="text-slate-400">Active Players</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div className="card p-4 hover-lift">
             <div className="text-2xl font-bold text-white">{eliminatedPlayers.length}</div>
-            <div className="text-white/80">Eliminated</div>
+            <div className="text-slate-400">Eliminated</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div className="card p-4 hover-lift">
             <div className="text-2xl font-bold text-white">{tables.length}</div>
-            <div className="text-white/80">Tables</div>
+            <div className="text-slate-400">Tables</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div className="card p-4 hover-lift">
             <div className="text-2xl font-bold text-white">{formatCurrency(tournament.buyIn)}</div>
-            <div className="text-white/80">Buy-in</div>
+            <div className="text-slate-400">Buy-in</div>
           </div>
         </div>
 
@@ -301,10 +301,10 @@ export default function TournamentPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+              className={`px-6 py-3 rounded-lg font-medium transition-smooth ${
                 activeTab === tab
-                  ? 'bg-white text-green-900'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+                  ? 'btn-primary'
+                  : 'btn-secondary'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -316,7 +316,7 @@ export default function TournamentPage() {
         {activeTab === 'players' && (
           <div className="space-y-6">
             {/* Player Registration */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="card p-6">
               <h3 className="text-xl font-bold text-white mb-4">Register New Player</h3>
               <div className="flex gap-4">
                 <input
@@ -324,19 +324,19 @@ export default function TournamentPage() {
                   value={newPlayerName}
                   onChange={(e) => setNewPlayerName(e.target.value)}
                   placeholder="Player name"
-                  className="flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60"
+                  className="input flex-1"
                   onKeyPress={(e) => e.key === 'Enter' && registerPlayer()}
                 />
                 <button
                   onClick={registerPlayer}
                   disabled={isRegistering || !newPlayerName.trim()}
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="btn-success"
                 >
                   {isRegistering ? 'Registering...' : 'Register'}
                 </button>
                 <button
                   onClick={seatPlayers}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  className="btn-primary"
                 >
                   Seat Players
                 </button>
@@ -344,25 +344,25 @@ export default function TournamentPage() {
             </div>
 
             {/* Active Players */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="card p-6">
               <h3 className="text-xl font-bold text-white mb-4">Active Players ({activePlayers.length})</h3>
               <div className="grid gap-4">
                 {activePlayers.map((player) => (
-                  <div key={player.id} className="bg-white/10 rounded-lg p-4 flex items-center justify-between">
+                  <div key={player.id} className="card-hover p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="text-white font-medium">{player.name}</div>
-                      <div className="text-green-400 font-bold">
+                      <div className="text-success-400 font-bold">
                         {player.chipCount.toLocaleString()} chips
                       </div>
                       {player.tableId && (
-                        <div className="text-white/60">
+                        <div className="text-slate-400">
                           Table {player.tableId}, Seat {player.seatNumber}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => eliminatePlayer(player.id)}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+                      className="btn-error btn-sm"
                     >
                       Eliminate
                     </button>
@@ -373,14 +373,14 @@ export default function TournamentPage() {
 
             {/* Eliminated Players */}
             {eliminatedPlayers.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div className="card p-6">
                 <h3 className="text-xl font-bold text-white mb-4">Eliminated Players ({eliminatedPlayers.length})</h3>
                 <div className="grid gap-2">
                   {eliminatedPlayers.map((player) => (
-                    <div key={player.id} className="bg-red-900/20 rounded-lg p-3 flex items-center justify-between">
-                      <div className="text-white/80">{player.name}</div>
+                    <div key={player.id} className="bg-error-500/10 rounded-lg p-3 flex items-center justify-between border border-error-500/20">
+                      <div className="text-slate-300">{player.name}</div>
                       {player.position && (
-                        <div className="text-red-400 font-medium">
+                        <div className="text-error-400 font-medium">
                           #{player.position}
                         </div>
                       )}
@@ -395,7 +395,7 @@ export default function TournamentPage() {
         {activeTab === 'tables' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tables.map((table) => (
-              <div key={table.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div key={table.id} className="card p-6">
                 <h3 className="text-xl font-bold text-white mb-4">
                   Table {table.number}
                 </h3>
@@ -405,15 +405,15 @@ export default function TournamentPage() {
                     const player = activePlayers.find(p => p.tableId === table.id && p.seatNumber === seatNumber);
 
                     return (
-                      <div key={seatNumber} className="flex items-center justify-between p-2 bg-white/10 rounded">
-                        <div className="text-white/60">Seat {seatNumber}</div>
+                      <div key={seatNumber} className="flex items-center justify-between p-2 bg-slate-700/30 rounded transition-smooth hover:bg-slate-700/50">
+                        <div className="text-slate-400">Seat {seatNumber}</div>
                         {player ? (
                           <div className="text-right">
                             <div className="text-white font-medium">{player.name}</div>
-                            <div className="text-green-400 text-sm">{player.chipCount.toLocaleString()}</div>
+                            <div className="text-success-400 text-sm">{player.chipCount.toLocaleString()}</div>
                           </div>
                         ) : (
-                          <div className="text-white/40">Empty</div>
+                          <div className="text-slate-500">Empty</div>
                         )}
                       </div>
                     );
@@ -425,7 +425,7 @@ export default function TournamentPage() {
         )}
 
         {activeTab === 'structure' && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+          <div className="card p-6">
             <h3 className="text-xl font-bold text-white mb-4">Blind Structure</h3>
             <div className="grid gap-3">
               {[
@@ -436,7 +436,7 @@ export default function TournamentPage() {
                 { level: 'BREAK', smallBlind: 0, bigBlind: 0, ante: 0, duration: '10:00' },
                 { level: 5, smallBlind: 15000, bigBlind: 30000, ante: 5000, duration: '15:00' },
               ].map((level, index) => (
-                <div key={index} className="bg-white/10 rounded-lg p-4 flex items-center justify-between">
+                <div key={index} className="card-hover p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="text-white font-medium w-16">
                       {level.level === 'BREAK' ? 'BREAK' : `Level ${level.level}`}
@@ -447,10 +447,10 @@ export default function TournamentPage() {
                         {level.ante > 0 && ` (${level.ante.toLocaleString()})`}
                       </div>
                     ) : (
-                      <div className="text-yellow-400">Break Time</div>
+                      <div className="text-warning-400">Break Time</div>
                     )}
                   </div>
-                  <div className="text-white/60">{level.duration}</div>
+                  <div className="text-slate-400">{level.duration}</div>
                 </div>
               ))}
             </div>

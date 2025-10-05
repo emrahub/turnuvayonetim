@@ -1,12 +1,14 @@
 {
   "name": "turnuvayonetim",
   "version": "1.0.0",
-  "description": "Advanced Poker Tournament Management System with Agent Orchestration",
+  "description": "Modern Poker Tournament Management System",
   "private": true,
   "packageManager": "npm@10.1.0",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/web",
+    "apps/backend",
+    "apps/ws",
+    "packages/db"
   ],
   "scripts": {
     "dev": "turbo run dev",
@@ -14,19 +16,6 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
-    "setup:agents": "node scripts/setup-agents.js",
-    "agents:start": "node scripts/start-agents.js",
-    "agents:status": "node scripts/agent-status.js",
-    "orchestrate": "node apps/cli/dist/index.js",
-    "orchestrate:build": "npm run orchestrate -- build --full",
-    "orchestrate:mvp": "npm run orchestrate -- build --mvp",
-    "orchestrate:interactive": "npm run orchestrate -- interactive",
-    "orchestrate:full": "npm run orchestrate -- build --full",
-    "orchestration:start": "node scripts/orchestration-start.js",
-    "orchestration:stop": "node scripts/orchestration-stop.js",
-    "orchestration:restart": "npm run orchestration:stop && npm run orchestration:start",
-    "orchestration:status": "node scripts/orchestration-status.js",
-    "type-check": "turbo run type-check",
     "db:setup": "docker-compose up -d postgres redis",
     "db:generate": "cd packages/db && npm run db:generate",
     "db:migrate": "cd packages/db && npm run db:migrate",
@@ -70,6 +59,7 @@
     "puppeteer": "^21.6.0",
     "redis": "^4.6.11",
     "selenium-webdriver": "^4.35.0",
+    "tournament-pairings": "^2.0.1",
     "uuid": "^9.0.1",
     "xstate": "^5.5.0",
     "zod": "^3.22.4"

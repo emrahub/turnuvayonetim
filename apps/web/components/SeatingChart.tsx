@@ -423,33 +423,15 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Left Sidebar - Unassigned Players */}
-          <AnimatePresence>
-            {showUnassigned && unassignedPlayers.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="xl:col-span-1"
-              >
-                <UnassignedPlayers
-                  players={unassignedPlayers}
-                  isExpanded={true}
-                  onToggleExpanded={() => {}}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Main Chart Area */}
-          <div className={`${showUnassigned && unassignedPlayers.length > 0 ? 'xl:col-span-2' : 'xl:col-span-3'}`}>
-            <div className="bg-gradient-to-br from-black/60 via-gray-900/50 to-black/60 backdrop-blur-sm rounded-xl border-2 border-amber-600/20 p-8 min-h-[600px] shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
+          {/* Main Chart Area - Expanded to 3 columns */}
+          <div className="xl:col-span-3">
+            <div className="bg-gradient-to-br from-[#1e3c72] to-[#2a5298] backdrop-blur-sm rounded-xl border-2 border-amber-600/20 p-8 min-h-[900px] shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
               <motion.div
                 style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}
                 className="w-full h-full"
               >
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-16 place-items-start justify-items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 place-items-center w-full">
                     <AnimatePresence>
                       {seating.layout.tables
                         .filter(table => table.status !== 'broken')
@@ -461,7 +443,10 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3 }}
-                            className="w-full max-w-[550px]"
+                            className="relative flex justify-center items-center w-full"
+                            style={{
+                              minHeight: '400px'
+                            }}
                           >
                             <TableCard
                               table={table}
@@ -530,28 +515,45 @@ export const SeatingChart: React.FC<SeatingChartProps> = ({
             </div>
           </div>
 
-          {/* Right Sidebar - Controls */}
-          <AnimatePresence>
-            {showControls && isControlsExpanded && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="xl:col-span-1"
-              >
-                <SeatingControls
-                  tables={seating.layout.tables}
-                  players={players}
-                  onAutoBalance={seating.autoBalance}
-                  onCreateTable={seating.createTable}
-                  onBreakTable={seating.breakTable}
-                  onAlgorithmChange={seating.setAlgorithm}
-                  onRuleChange={seating.updateRules}
-                  disabled={readOnly || seating.isBalancing}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Right Sidebar - Controls & Unassigned Players */}
+          <div className="xl:col-span-1 space-y-6">
+            <AnimatePresence>
+              {showControls && isControlsExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                >
+                  <SeatingControls
+                    tables={seating.layout.tables}
+                    players={players}
+                    onAutoBalance={seating.autoBalance}
+                    onCreateTable={seating.createTable}
+                    onBreakTable={seating.breakTable}
+                    onAlgorithmChange={seating.setAlgorithm}
+                    onRuleChange={seating.updateRules}
+                    disabled={readOnly || seating.isBalancing}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showUnassigned && unassignedPlayers.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <UnassignedPlayers
+                    players={unassignedPlayers}
+                    isExpanded={true}
+                    onToggleExpanded={() => {}}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Balancing Overlay */}
