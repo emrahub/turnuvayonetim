@@ -1,10 +1,7 @@
 import { createTRPCReact } from '@trpc/react-query';
 import { createTRPCProxyClient, httpBatchLink, wsLink, splitLink } from '@trpc/client';
-// import { type AppRouter } from '@/../../backend/src/trpc/router';
 import superjson from 'superjson';
-
-// Temporary type for AppRouter
-type AppRouter = any;
+import type { AppRouter } from '../../../../apps/backend/src/routers';
 
 // Create tRPC React hooks
 export const trpc = createTRPCReact<AppRouter>();

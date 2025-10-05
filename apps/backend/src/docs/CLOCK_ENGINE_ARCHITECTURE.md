@@ -234,7 +234,7 @@ for await (const event of eventStore.streamEvents(organizationId)) {
 
 ```bash
 # WebSocket Configuration
-WS_PORT=3001
+WS_PORT=3003
 
 # Redis Configuration (optional, for horizontal scaling)
 REDIS_ENABLED=true
@@ -347,8 +347,8 @@ const settings: ClockSettings = {
 
 ```dockerfile
 # Add to existing Dockerfile
-EXPOSE 4000 3001
-ENV WS_PORT=3001
+EXPOSE 4000 3003
+ENV WS_PORT=3003
 ENV NODE_ENV=production
 ```
 

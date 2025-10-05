@@ -39,8 +39,19 @@ coverage/
 # Dependency directories
 jspm_packages/
 
-# TypeScript cache
+# TypeScript cache and build artifacts
 *.tsbuildinfo
+*.d.ts
+*.d.ts.map
+!next-env.d.ts
+
+# JavaScript build files (should not exist in TS project)
+*.js
+*.js.map
+!next.config.js
+!postcss.config.js
+!tailwind.config.js
+!turbo.json
 
 # Optional npm cache directory
 .npm

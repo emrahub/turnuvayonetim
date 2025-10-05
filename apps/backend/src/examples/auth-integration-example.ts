@@ -71,8 +71,8 @@ export async function setupAuthenticationSystem() {
 
   // CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3005',
+    'http://localhost:3003'
   ];
   app.use(createCorsMiddleware(allowedOrigins));
 
@@ -356,7 +356,7 @@ export function setupWebSocketAuthentication(io: any, authService: any) {
 if (require.main === module) {
   setupAuthenticationSystem()
     .then(({ app }) => {
-      const port = process.env.PORT || 3001;
+      const port = process.env.PORT || 3003;
       app.listen(port, () => {
         console.log(`🚀 Server running on port ${port}`);
         console.log(`🔒 Authentication system enabled`);

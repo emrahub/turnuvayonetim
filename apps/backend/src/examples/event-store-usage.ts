@@ -21,7 +21,7 @@ async function initializeEventSystem(): Promise<EventSystem> {
     },
     websocket: {
       enabled: true,
-      port: 3001
+      port: 3003
     },
     eventStore: {
       snapshotFrequency: 100,

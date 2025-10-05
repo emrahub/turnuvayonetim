@@ -1,0 +1,249 @@
+{
+  "projectType": "enterprise",
+  "description": "Enterprise system with ERP/CRM integration, workflows, reporting, and compliance",
+  "recommendedStack": {
+    "backend": ["Java/Spring", ".NET Core", "Node.js/NestJS"],
+    "frontend": ["Angular", "React", "Vue Enterprise"],
+    "database": ["Oracle", "SQL Server", "PostgreSQL"],
+    "integration": ["Apache Camel", "MuleSoft", "WSO2"],
+    "workflow": ["Camunda", "Activiti", "jBPM"],
+    "reporting": ["Jasper", "Crystal Reports", "Power BI"]
+  },
+  "agents": [
+    {
+      "id": "integration",
+      "name": "System Integration Agent",
+      "role": "ERP/CRM integration, ESB, data synchronization, ETL",
+      "capabilities": [
+        "soap",
+        "rest",
+        "message-queues",
+        "etl",
+        "data-mapping",
+        "esb",
+        "api-gateway",
+        "legacy-systems"
+      ],
+      "responsibilities": [
+        "Integrate with ERP systems (SAP, Oracle)",
+        "Connect CRM platforms (Salesforce, Dynamics)",
+        "Setup message queuing (RabbitMQ, Kafka)",
+        "Implement ETL pipelines",
+        "Create data transformation rules",
+        "Build API gateway"
+      ],
+      "port": 9001,
+      "vncPort": 7900,
+      "browserConfig": {
+        "profilePath": "./profiles/integration",
+        "headless": false
+      }
+    },
+    {
+      "id": "business",
+      "name": "Business Logic Agent",
+      "role": "Business rules, workflows, process automation, domain logic",
+      "capabilities": [
+        "bpmn",
+        "rules-engine",
+        "workflow-automation",
+        "domain-modeling",
+        "event-driven",
+        "cqrs",
+        "saga-pattern"
+      ],
+      "responsibilities": [
+        "Model business processes (BPMN)",
+        "Implement business rules engine",
+        "Create workflow automations",
+        "Design domain models",
+        "Implement CQRS patterns",
+        "Handle complex transactions"
+      ],
+      "port": 9002,
+      "vncPort": 7901,
+      "browserConfig": {
+        "profilePath": "./profiles/business",
+        "headless": false
+      }
+    },
+    {
+      "id": "reporting",
+      "name": "Reporting & BI Agent",
+      "role": "Business intelligence, reporting, data warehouse, analytics",
+      "capabilities": [
+        "olap",
+        "data-warehouse",
+        "etl",
+        "reporting-tools",
+        "dashboards",
+        "kpi-metrics",
+        "data-mining"
+      ],
+      "responsibilities": [
+        "Design data warehouse schema",
+        "Build ETL for reporting",
+        "Create business reports",
+        "Develop BI dashboards",
+        "Implement KPI tracking",
+        "Setup data mining processes"
+      ],
+      "port": 9003,
+      "vncPort": 7902,
+      "browserConfig": {
+        "profilePath": "./profiles/reporting",
+        "headless": false
+      }
+    },
+    {
+      "id": "security",
+      "name": "Security & Compliance Agent",
+      "role": "Security implementation, audit logging, compliance, governance",
+      "capabilities": [
+        "soc2",
+        "gdpr",
+        "hipaa",
+        "audit-logging",
+        "encryption",
+        "access-control",
+        "vulnerability-scanning",
+        "compliance-reporting"
+      ],
+      "responsibilities": [
+        "Implement security controls",
+        "Setup audit logging",
+        "Ensure regulatory compliance",
+        "Create compliance reports",
+        "Implement data encryption",
+        "Manage access controls"
+      ],
+      "port": 9004,
+      "vncPort": 7903,
+      "browserConfig": {
+        "profilePath": "./profiles/security",
+        "headless": false
+      }
+    }
+  ],
+  "orchestration": {
+    "workflow": "sequential",
+    "stages": [
+      {
+        "name": "architecture",
+        "description": "Design system architecture and integrations",
+        "agents": ["integration"],
+        "parallel": false,
+        "tasks": [
+          "analyze_existing_systems",
+          "design_integration_architecture",
+          "setup_connectivity"
+        ]
+      },
+      {
+        "name": "business_implementation",
+        "description": "Implement business logic and workflows",
+        "agents": ["business", "security"],
+        "parallel": true,
+        "tasks": [
+          "model_business_processes",
+          "implement_workflows",
+          "setup_security"
+        ]
+      },
+      {
+        "name": "data_layer",
+        "description": "Setup reporting and analytics",
+        "agents": ["reporting"],
+        "parallel": false,
+        "tasks": [
+          "design_data_warehouse",
+          "create_etl_pipelines",
+          "build_reports"
+        ]
+      },
+      {
+        "name": "compliance",
+        "description": "Ensure compliance and security",
+        "agents": ["security"],
+        "parallel": false,
+        "tasks": [
+          "security_audit",
+          "compliance_check",
+          "documentation"
+        ]
+      }
+    ],
+    "maxConcurrency": 4,
+    "taskTimeout": 180000,
+    "retryAttempts": 3
+  },
+  "integrations": {
+    "erp": {
+      "sap": {
+        "connector": "SAP JCo",
+        "protocols": ["RFC", "IDOC", "BAPI"]
+      },
+      "oracle": {
+        "connector": "Oracle Adapter",
+        "protocols": ["JDBC", "AQ", "Web Services"]
+      }
+    },
+    "crm": {
+      "salesforce": {
+        "connector": "Salesforce API",
+        "protocols": ["REST", "SOAP", "Bulk API"]
+      },
+      "dynamics": {
+        "connector": "Dynamics 365 SDK",
+        "protocols": ["Web API", "Organization Service"]
+      }
+    }
+  },
+  "dockerServices": {
+    "postgres": {
+      "image": "postgres:15-alpine",
+      "port": 5432
+    },
+    "redis": {
+      "image": "redis:7-alpine",
+      "port": 6379
+    },
+    "rabbitmq": {
+      "image": "rabbitmq:3-management",
+      "port": 5672,
+      "managementPort": 15672
+    },
+    "elasticsearch": {
+      "image": "elasticsearch:8.11.0",
+      "port": 9200
+    }
+  },
+  "envVariables": {
+    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/enterprise",
+    "REDIS_URL": "redis://localhost:6379",
+    "RABBITMQ_URL": "amqp://guest:guest@localhost:5672",
+    "ELASTICSEARCH_URL": "http://localhost:9200",
+    "SAP_HOST": "sap.company.com",
+    "SAP_CLIENT": "100",
+    "SAP_USER": "...",
+    "SAP_PASSWORD": "...",
+    "SALESFORCE_INSTANCE_URL": "https://company.salesforce.com",
+    "SALESFORCE_CLIENT_ID": "...",
+    "SALESFORCE_CLIENT_SECRET": "...",
+    "LDAP_URL": "ldap://company.com:389",
+    "SMTP_HOST": "smtp.company.com"
+  },
+  "compliance": {
+    "standards": ["SOC2", "ISO27001", "GDPR", "HIPAA"],
+    "audit": {
+      "logging": "centralized",
+      "retention": "7-years",
+      "encryption": "AES-256"
+    },
+    "security": {
+      "authentication": "SAML/OAuth2",
+      "authorization": "RBAC/ABAC",
+      "encryption": "TLS 1.3"
+    }
+  }
+}

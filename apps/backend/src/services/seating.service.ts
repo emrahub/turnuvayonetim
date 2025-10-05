@@ -33,7 +33,7 @@ export class SeatingService {
     const activeEntries = await this.prisma.entry.findMany({
       where: {
         tournamentId,
-        status: 'ACTIVE'
+        status: { in: ['REGISTERED', 'ACTIVE'] }
       },
       orderBy: [
         { registeredAt: 'asc' }, // FIFO seating
@@ -55,7 +55,7 @@ export class SeatingService {
     );
 
     // Create or get existing tables
-    const tables = await this.ensureTables(tournamentId, tableCount);
+    const tables = await this.ensureTables(tournamentId, tableCount, config.maxPlayersPerTable);
 
     // Clear existing seating
     await this.clearExistingSeating(tournamentId);
@@ -184,11 +184,13 @@ export class SeatingService {
 
   private async ensureTables(
     tournamentId: string,
-    tableCount: number
+    tableCount: number,
+    maxSeatsPerTable: number
   ): Promise<Table[]> {
     const existingTables = await this.prisma.table.findMany({
       where: { tournamentId },
-      orderBy: { tableNumber: 'asc' }
+      orderBy: { tableNumber: 'asc' },
+      include: { seats: true }
     });
 
     const tables: Table[] = [...existingTables];
@@ -199,12 +201,13 @@ export class SeatingService {
         data: {
           tournamentId,
           tableNumber: i + 1,
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          maxSeats: maxSeatsPerTable
         }
       });
 
-      // Create seats for this table (9 seats per table)
-      for (let seatNum = 1; seatNum <= 9; seatNum++) {
+      // Create seats for this table according to configuration
+      for (let seatNum = 1; seatNum <= maxSeatsPerTable; seatNum++) {
         await this.prisma.seat.create({
           data: {
             tableId: table.id,
@@ -214,6 +217,33 @@ export class SeatingService {
       }
 
       tables.push(table);
+    }
+
+    // Ensure existing tables have enough seats and correct maxSeats
+    for (const table of tables.slice(0, tableCount)) {
+      if ((table as any).maxSeats && (table as any).maxSeats < maxSeatsPerTable) {
+        await this.prisma.table.update({
+          where: { id: table.id },
+          data: { maxSeats: maxSeatsPerTable }
+        });
+      }
+
+      const existingSeatCount = existingTables.find(t => t.id === table.id)?.seats?.length ?? 0;
+      for (let seatNum = existingSeatCount + 1; seatNum <= maxSeatsPerTable; seatNum++) {
+        await this.prisma.seat.upsert({
+          where: {
+            tableId_seatNumber: {
+              tableId: table.id,
+              seatNumber: seatNum
+            }
+          },
+          update: {},
+          create: {
+            tableId: table.id,
+            seatNumber: seatNum
+          }
+        });
+      }
     }
 
     return tables.slice(0, tableCount);
@@ -248,7 +278,7 @@ export class SeatingService {
     for (const entry of entries) {
       // Find table with minimum players that hasn't reached max capacity
       let targetTable = tables[0];
-      let minPlayers = tableCounts.get(targetTable.id) || 0;
+      let minPlayers = Number.POSITIVE_INFINITY;
 
       for (const table of tables) {
         const currentCount = tableCounts.get(table.id) || 0;
@@ -278,7 +308,7 @@ export class SeatingService {
     assignments: Array<{ entryId: string; tableId: string; seatNumber: number }>
   ): Promise<void> {
     for (const assignment of assignments) {
-      // Find the seat and assign the player
+      // Assign the seat
       await this.prisma.seat.updateMany({
         where: {
           tableId: assignment.tableId,
@@ -286,6 +316,16 @@ export class SeatingService {
         },
         data: {
           entryId: assignment.entryId
+        }
+      });
+
+      // Update entry with table and seat info and set ACTIVE status
+      await this.prisma.entry.update({
+        where: { id: assignment.entryId },
+        data: {
+          tableId: assignment.tableId,
+          seatNumber: assignment.seatNumber,
+          status: 'ACTIVE'
         }
       });
     }

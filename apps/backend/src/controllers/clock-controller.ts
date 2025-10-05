@@ -1,7 +1,8 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { EventStore } from '../services/event-store';
-import ClockService, { ClockState, ClockSettings, BlindLevel, TimeSyncRequest, ClientConnection } from '../services/clock-service';
+import ClockService, { ClockSettings, BlindLevel, TimeSyncRequest, ClientConnection } from '../services/clock-service';
+import type { ClockState } from '../services/clock-service';
 import { verify } from 'jsonwebtoken';
 import { TRPCError } from '@trpc/server';
 
@@ -99,7 +100,7 @@ export class ClockController {
         // Fetch user details from database
         const user = await this.prisma.user.findUnique({
           where: { id: decoded.userId },
-          include: { organizationUsers: true }
+          include: { UserOrganization: true }
         });
 
         if (!user) {
@@ -108,8 +109,8 @@ export class ClockController {
 
         socket.data = {
           userId: user.id,
-          organizationId: auth.organizationId || user.organizationUsers[0]?.organizationId,
-          role: user.organizationUsers[0]?.role,
+          organizationId: auth.organizationId || user.UserOrganization[0]?.organizationId || '',
+          role: user.UserOrganization[0]?.role || 'STAFF',
           isAuthenticated: true,
           tournaments: new Set(),
           isController: false
@@ -411,7 +412,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.startClock(
+      const _clockState = await this.clockService.startClock(
         payload.tournamentId,
         socketData.userId!,
         payload.statistics
@@ -429,7 +430,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.pauseClock(
+      const _clockState = await this.clockService.pauseClock(
         payload.tournamentId,
         socketData.userId!,
         payload.reason,
@@ -448,7 +449,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.resumeClock(
+      const _clockState = await this.clockService.resumeClock(
         payload.tournamentId,
         socketData.userId!,
         payload.notes
@@ -466,7 +467,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.goToLevel(
+      const _clockState = await this.clockService.goToLevel(
         payload.tournamentId,
         payload.levelIdx,
         socketData.userId!,
@@ -485,7 +486,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.completeClock(
+      const _clockState = await this.clockService.completeClock(
         payload.tournamentId,
         socketData.userId!
       );
@@ -545,7 +546,7 @@ export class ClockController {
       await this.verifyControllerPermissions(socket, payload.tournamentId);
 
       const socketData = socket.data as SocketData;
-      const clockState = await this.clockService.updateStatistics(
+      const _clockState = await this.clockService.updateStatistics(
         payload.tournamentId,
         payload.statistics,
         socketData.userId!
@@ -602,8 +603,8 @@ export class ClockController {
     const tournament = await this.prisma.tournament.findFirst({
       where: {
         id: tournamentId,
-        organization: {
-          users: {
+        Organization: {
+          UserOrganization: {
             some: { userId }
           }
         }

@@ -561,23 +561,4 @@ export function isPayoutEvent(event: BaseEvent): boolean {
 
 // Export all types
 export type TournamentEvent = BaseEvent;
-export {
-  TournamentCreatedData,
-  TournamentUpdatedData,
-  TournamentStartedData,
-  TournamentPausedData,
-  TournamentResumedData,
-  TournamentCompletedData,
-  TournamentCancelledData,
-  PlayerRegisteredData,
-  PlayerEliminatedData,
-  PlayerMovedData,
-  TableCreatedData,
-  TableBalancedData,
-  TableBrokenData,
-  ClockLevelChangedData,
-  ClockTimeUpdatedData,
-  PayoutCalculatedData,
-  PayoutDistributedData,
-  ChipCountUpdatedData
-};
+// Note: All data types are already exported via their interface declarations above

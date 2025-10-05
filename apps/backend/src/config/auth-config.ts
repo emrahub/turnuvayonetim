@@ -139,12 +139,8 @@ export function validateAuthEnvironment(): {
     'REFRESH_TOKEN_SECRET'
   ];
 
-  const optionalVars = [
-    'JWT_PRIVATE_KEY', // For RS256
-    'JWT_PUBLIC_KEY',  // For RS256
-    'PASSWORD_PEPPER',
-    'ALLOWED_ORIGINS'
-  ];
+  // Optional environment variables for advanced features
+  // const _optionalVars = ['JWT_PRIVATE_KEY', 'JWT_PUBLIC_KEY', 'PASSWORD_PEPPER', 'ALLOWED_ORIGINS'];
 
   const missingVars: string[] = [];
   const warnings: string[] = [];

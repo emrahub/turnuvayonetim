@@ -203,13 +203,16 @@ export const useTournamentStore = create<TournamentStore>()(
       }
 
       const socket = io(url, {
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'], // Sadece WebSocket kullan, polling'i devre dışı bırak
+        upgrade: false, // Polling'den WebSocket'e upgrade'i devre dışı bırak
         auth: {
           token: typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
         },
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000
       });
 
       socket.on('connect', () => {

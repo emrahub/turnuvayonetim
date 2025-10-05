@@ -112,7 +112,7 @@ REDIS_URL="redis://localhost:6379"
 
 # Security
 PASSWORD_PEPPER="your-random-pepper-string"
-ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3001"
+ALLOWED_ORIGINS="http://localhost:3005,http://localhost:3003"
 ```
 
 ### 2. Install Dependencies
@@ -137,7 +137,7 @@ import { setupAuthenticationSystem } from './src/examples/auth-integration-examp
 const { app, authService, auditService } = await setupAuthenticationSystem();
 
 // Start server
-app.listen(3001, () => {
+app.listen(3003, () => {
   console.log('🚀 Server running with authentication system');
 });
 ```
@@ -462,7 +462,7 @@ RUN npm ci --only=production
 COPY . .
 RUN npm run build
 
-EXPOSE 3001
+EXPOSE 3003
 CMD ["npm", "start"]
 ```
 

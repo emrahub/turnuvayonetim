@@ -21,6 +21,11 @@
     "orchestrate:build": "npm run orchestrate -- build --full",
     "orchestrate:mvp": "npm run orchestrate -- build --mvp",
     "orchestrate:interactive": "npm run orchestrate -- interactive",
+    "orchestrate:full": "npm run orchestrate -- build --full",
+    "orchestration:start": "node scripts/orchestration-start.js",
+    "orchestration:stop": "node scripts/orchestration-stop.js",
+    "orchestration:restart": "npm run orchestration:stop && npm run orchestration:start",
+    "orchestration:status": "node scripts/orchestration-status.js",
     "type-check": "turbo run type-check",
     "db:setup": "docker-compose up -d postgres redis",
     "db:generate": "cd packages/db && npm run db:generate",
@@ -55,7 +60,7 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "chalk": "^5.3.0",
+    "chalk": "^5.6.2",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
     "inquirer": "^9.2.12",

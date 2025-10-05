@@ -437,42 +437,5 @@ declare global {
 // ================================================================
 // EXPORTS
 // ================================================================
-
-export type {
-  JWTPayload,
-  RefreshTokenPayload,
-  LoginRequest,
-  LoginResponse,
-  RegisterRequest,
-  RegisterResponse,
-  RefreshTokenRequest,
-  RefreshTokenResponse,
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  ChangePasswordRequest,
-  VerifyEmailRequest,
-  UserInfo,
-  OrganizationInfo,
-  SessionInfo,
-  DeviceInfo,
-  TwoFactorSetupRequest,
-  TwoFactorSetupResponse,
-  TwoFactorVerifyRequest,
-  TwoFactorDisableRequest,
-  SecurityEvent,
-  AccountLockInfo,
-  Permission,
-  RolePermissions,
-  RateLimitConfig,
-  RateLimitInfo,
-  TokenBlacklistEntry,
-  TokenValidationResult,
-  OrganizationContext,
-  AuthContext,
-  EmailVerificationToken,
-  PasswordResetToken,
-  InviteToken,
-  AuthError,
-  AuthConfig
-};
+// All types are already exported via their declarations above
 

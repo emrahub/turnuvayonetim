@@ -15,9 +15,13 @@ const io = new Server(httpServer, {
   cors: {
     origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
     credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   },
   pingTimeout: 60000,
   pingInterval: 25000,
+  transports: ['websocket', 'polling'], // Her iki transport'ı destekle
+  allowEIO3: true, // Engine.IO v3 uyumluluğu
 });
 
 // Logging utility
@@ -38,7 +42,7 @@ if (process.env.REDIS_URL) {
   log.info('Redis adapter configured for scaling');
 }
 
-const PORT = process.env.WS_PORT || 3001;
+const PORT = process.env.WS_PORT || 3003;
 const clocks = new Map<string, ClockEngine>();
 
 // Authentication middleware
@@ -54,9 +58,9 @@ io.use(async (socket, next) => {
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: {
-        organizations: {
+        UserOrganization: {
           include: {
-            organization: true,
+            Organization: true,
           },
         },
       },
@@ -95,77 +99,82 @@ io.on('connection', (socket) => {
   socket.on('tournament:join', async (data: { tournamentId: string }) => {
     const { tournamentId } = data;
 
-    // Verify tournament exists
-    const tournament = await prisma.tournament.findUnique({
-      where: { id: tournamentId }
-    });
+    // For demo mode, create a default tournament structure
+    const isDemoMode = tournamentId.startsWith('tournament_') || tournamentId === 'demo-tournament';
 
-    if (!tournament) {
-      socket.emit('error', { message: 'Tournament not found' });
-      return;
+    let tournament: any;
+    let levels: any[] = [];
+
+    if (isDemoMode) {
+      // Demo tournament with default blind structure
+      tournament = {
+        id: tournamentId,
+        name: 'Demo Tournament',
+        status: 'SCHEDULED'
+      };
+
+      // Default blind structure for demo
+      levels = [
+        { idx: 0, smallBlind: 25, bigBlind: 50, ante: 0, durationSeconds: 900, isBreak: false },
+        { idx: 1, smallBlind: 50, bigBlind: 100, ante: 0, durationSeconds: 900, isBreak: false },
+        { idx: 2, smallBlind: 75, bigBlind: 150, ante: 25, durationSeconds: 900, isBreak: false },
+        { idx: 3, smallBlind: 100, bigBlind: 200, ante: 25, durationSeconds: 900, isBreak: false },
+        { idx: 4, smallBlind: 0, bigBlind: 0, ante: 0, durationSeconds: 600, isBreak: true, breakName: 'Break' },
+        { idx: 5, smallBlind: 150, bigBlind: 300, ante: 50, durationSeconds: 900, isBreak: false },
+        { idx: 6, smallBlind: 200, bigBlind: 400, ante: 50, durationSeconds: 900, isBreak: false },
+        { idx: 7, smallBlind: 300, bigBlind: 600, ante: 75, durationSeconds: 900, isBreak: false },
+        { idx: 8, smallBlind: 400, bigBlind: 800, ante: 100, durationSeconds: 900, isBreak: false },
+        { idx: 9, smallBlind: 600, bigBlind: 1200, ante: 200, durationSeconds: 900, isBreak: false }
+      ];
+    } else {
+      // Verify tournament exists in database
+      tournament = await prisma.tournament.findUnique({
+        where: { id: tournamentId }
+      });
+
+      if (!tournament) {
+        socket.emit('error', { message: 'Tournament not found' });
+        return;
+      }
+
+      // Load blind structure from database
+      const structure = await prisma.blindStructure.findUnique({
+        where: { tournamentId },
+        include: { BlindLevel: { orderBy: { idx: 'asc' } } }
+      });
+
+      if (structure && structure.BlindLevel) {
+        levels = structure.BlindLevel.map((l: any) => ({
+          idx: l.idx,
+          smallBlind: l.smallBlind,
+          bigBlind: l.bigBlind,
+          ante: l.ante,
+          durationSeconds: l.durationSeconds,
+          isBreak: l.isBreak,
+          breakName: l.breakName
+        }));
+      }
     }
 
     // Join room
     socket.join(`tournament:${tournamentId}`);
     socket.data.tournamentId = tournamentId;
 
-    // Send current state
-    const clock = clocks.get(tournamentId);
-    if (clock) {
-      socket.emit('clock:sync', clock.getState());
-    }
-
-    // Send tournament data
-    socket.emit('tournament:joined', {
-      tournament,
-      playersCount: await prisma.entry.count({
-        where: { tournamentId }
-      }),
-      tablesCount: await prisma.table.count({
-        where: { tournamentId }
-      })
-    });
-  });
-
-  // Clock control events
-  socket.on('clock:start', async (data: { tournamentId: string; levelIdx?: number }) => {
-    const { tournamentId, levelIdx = 0 } = data;
-
-    // Check permissions (simplified for now)
+    // Ensure clock exists for this tournament
     let clock = clocks.get(tournamentId);
-
-    if (!clock) {
-      // Load blind structure
-      const structure = await prisma.blindStructure.findUnique({
-        where: { tournamentId },
-        include: { levels: { orderBy: { idx: 'asc' } } }
-      });
-
-      if (!structure) {
-        socket.emit('error', { message: 'Blind structure not found' });
-        return;
-      }
-
-      const levels = structure.levels.map(l => ({
-        idx: l.idx,
-        smallBlind: l.smallBlind,
-        bigBlind: l.bigBlind,
-        ante: l.ante,
-        durationSeconds: l.durationSeconds,
-        isBreak: l.isBreak,
-        breakName: l.breakName
-      }));
-
-      // Create sync callback for database updates
-      const syncCallback = async (state: any) => {
+    if (!clock && levels.length > 0) {
+      // Create sync callback for updates (demo mode doesn't save to DB)
+      const syncCallback = isDemoMode ? async (state: any) => {
+        log.debug('Demo mode clock sync', state);
+      } : async (state: any) => {
         try {
           await prisma.clockState.create({
             data: {
               tournamentId,
               currentLevelIdx: state.currentLevelIdx,
               status: state.status,
-              levelStartTime: BigInt(state.serverTime - (state.elapsedSeconds * 1000)),
-              pausedDuration: BigInt(0),
+              levelStartTime: BigInt(state.levelStartTime),
+              pausedDuration: BigInt(state.pausedDuration),
               serverTime: BigInt(state.serverTime),
             }
           });
@@ -176,20 +185,54 @@ io.on('connection', (socket) => {
 
       clock = new ClockEngine(tournamentId, levels, syncCallback);
 
-      // Setup clock event listeners
-      clock.on('clock:sync', (state) => {
-        io.to(`tournament:${tournamentId}`).emit('clock:sync', state);
-      });
+        // Setup clock event listeners
+        clock.on('clock:sync', (state) => {
+          io.to(`tournament:${tournamentId}`).emit('clock:sync', state);
+        });
 
-      clock.on('clock:levelChanged', (state) => {
-        io.to(`tournament:${tournamentId}`).emit('clock:levelChanged', state);
-      });
+        clock.on('clock:levelChanged', (state) => {
+          io.to(`tournament:${tournamentId}`).emit('clock:levelChanged', state);
+        });
 
-      clock.on('clock:completed', (state) => {
-        io.to(`tournament:${tournamentId}`).emit('clock:completed', state);
-      });
+        clock.on('clock:completed', (state) => {
+          io.to(`tournament:${tournamentId}`).emit('clock:completed', state);
+        });
 
-      clocks.set(tournamentId, clock);
+        clocks.set(tournamentId, clock);
+    }
+
+    // Send current clock state
+    if (clock) {
+      socket.emit('clock:sync', clock.getState());
+    }
+
+    // Send tournament data
+    const tournamentData = isDemoMode ? {
+      tournament,
+      playersCount: 0,
+      tablesCount: 0
+    } : {
+      tournament,
+      playersCount: await prisma.entry.count({
+        where: { tournamentId }
+      }),
+      tablesCount: await prisma.table.count({
+        where: { tournamentId }
+      })
+    };
+
+    socket.emit('tournament:joined', tournamentData);
+  });
+
+  // Clock control events
+  socket.on('clock:start', async (data: { tournamentId: string; levelIdx?: number }) => {
+    const { tournamentId, levelIdx = 0 } = data;
+
+    const clock = clocks.get(tournamentId);
+
+    if (!clock) {
+      socket.emit('error', { message: 'Clock not found' });
+      return;
     }
 
     // Start clock
@@ -504,6 +547,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle clock level jumping
+  socket.on('clock:gotoLevel', async (data: { tournamentId: string; levelIdx: number }) => {
+    try {
+      const { tournamentId, levelIdx } = data;
+      const clock = clocks.get(tournamentId);
+
+      if (!clock) {
+        socket.emit('error', { message: 'Clock not found' });
+        return;
+      }
+
+      // Validate level index
+      if (levelIdx < 0) {
+        socket.emit('error', { message: 'Invalid level index' });
+        return;
+      }
+
+      const state = clock.jumpToLevel(levelIdx);
+      log.info('Clock jumped to level', { tournamentId, levelIdx });
+
+      // Broadcast to all clients in room
+      io.to(`tournament:${tournamentId}`).emit('clock:levelChanged', state);
+    } catch (error) {
+      log.error('Clock goto level failed', error);
+      socket.emit('error', { message: 'Failed to jump to level' });
+    }
+  });
+
   // Player chip updates
   socket.on('player:updateChips', async (data) => {
     try {
@@ -665,6 +736,6 @@ httpServer.listen(PORT, () => {
   log.info('Server started successfully', {
     port: PORT,
     nodeEnv: process.env.NODE_ENV,
-    corsOrigin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    corsOrigin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'
   });
 });

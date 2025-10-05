@@ -12,18 +12,21 @@ export interface BlindLevel {
 
 export interface ClockState {
   tournamentId: string;
-  status: 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
+  status: 'idle' | 'running' | 'paused' | 'completed';
   currentLevelIdx: number;
   currentLevel: BlindLevel;
   nextLevel?: BlindLevel;
   elapsedSeconds: number;
   remainingSeconds: number;
   totalElapsedSeconds: number;
+  levelStartTime: number;
+  pausedDuration: number;
   pausedAt?: Date;
   startedAt?: Date;
   completedAt?: Date;
   serverTime: number;
   driftCorrection: number;
+  version: number;
 }
 
 export class ClockEngine extends EventEmitter {
@@ -34,6 +37,9 @@ export class ClockEngine extends EventEmitter {
   private lastTick: number = Date.now();
   private driftAdjustment: number = 0;
   private syncCallback?: (state: ClockState) => Promise<void>;
+  private levelStartTime: number = Date.now();
+  private pausedDuration: number = 0;
+  private version: number = 1;
 
   constructor(tournamentId: string, levels: BlindLevel[], syncCallback?: (state: ClockState) => Promise<void>) {
     super();
@@ -42,17 +48,21 @@ export class ClockEngine extends EventEmitter {
     this.syncCallback = syncCallback;
 
     // Initialize state
+    this.levelStartTime = Date.now();
     this.state = {
       tournamentId,
-      status: 'IDLE',
+      status: 'idle',
       currentLevelIdx: 0,
       currentLevel: levels[0],
       nextLevel: levels[1],
       elapsedSeconds: 0,
       remainingSeconds: levels[0].durationSeconds,
       totalElapsedSeconds: 0,
+      levelStartTime: this.levelStartTime,
+      pausedDuration: 0,
       serverTime: Date.now(),
-      driftCorrection: 0
+      driftCorrection: 0,
+      version: this.version
     };
   }
 
@@ -65,17 +75,24 @@ export class ClockEngine extends EventEmitter {
   }
 
   public start(levelIdx: number = 0): ClockState {
-    if (this.state.status === 'RUNNING') {
+    if (this.state.status === 'running') {
       return this.getState();
     }
+
+    this.levelStartTime = Date.now();
+    this.pausedDuration = 0;
+    this.version++;
 
     this.state.currentLevelIdx = levelIdx;
     this.state.currentLevel = this.levels[levelIdx];
     this.state.nextLevel = this.levels[levelIdx + 1];
     this.state.elapsedSeconds = 0;
     this.state.remainingSeconds = this.state.currentLevel.durationSeconds;
-    this.state.status = 'RUNNING';
+    this.state.status = 'running';
     this.state.startedAt = new Date();
+    this.state.levelStartTime = this.levelStartTime;
+    this.state.pausedDuration = this.pausedDuration;
+    this.state.version = this.version;
 
     this.lastTick = Date.now();
     this.startTimer();
@@ -85,12 +102,18 @@ export class ClockEngine extends EventEmitter {
   }
 
   public pause(): ClockState {
-    if (this.state.status !== 'RUNNING') {
+    if (this.state.status !== 'running') {
       return this.getState();
     }
 
-    this.state.status = 'PAUSED';
+    const now = Date.now();
+    this.pausedDuration += (now - this.lastTick);
+    this.version++;
+
+    this.state.status = 'paused';
     this.state.pausedAt = new Date();
+    this.state.pausedDuration = this.pausedDuration;
+    this.state.version = this.version;
     this.stopTimer();
 
     this.emit('clock:paused', this.getState());
@@ -98,11 +121,13 @@ export class ClockEngine extends EventEmitter {
   }
 
   public resume(): ClockState {
-    if (this.state.status !== 'PAUSED') {
+    if (this.state.status !== 'paused') {
       return this.getState();
     }
 
-    this.state.status = 'RUNNING';
+    this.version++;
+    this.state.status = 'running';
+    this.state.version = this.version;
     delete this.state.pausedAt;
 
     this.lastTick = Date.now();
@@ -114,7 +139,9 @@ export class ClockEngine extends EventEmitter {
 
   public stop(): ClockState {
     this.stopTimer();
-    this.state.status = 'IDLE';
+    this.version++;
+    this.state.status = 'idle';
+    this.state.version = this.version;
     this.state.completedAt = new Date();
 
     this.emit('clock:stopped', this.getState());
@@ -126,16 +153,23 @@ export class ClockEngine extends EventEmitter {
       throw new Error('Invalid level index');
     }
 
-    const wasRunning = this.state.status === 'RUNNING';
+    const wasRunning = this.state.status === 'running';
     if (wasRunning) {
       this.stopTimer();
     }
+
+    this.levelStartTime = Date.now();
+    this.pausedDuration = 0;
+    this.version++;
 
     this.state.currentLevelIdx = levelIdx;
     this.state.currentLevel = this.levels[levelIdx];
     this.state.nextLevel = this.levels[levelIdx + 1];
     this.state.elapsedSeconds = 0;
     this.state.remainingSeconds = this.state.currentLevel.durationSeconds;
+    this.state.levelStartTime = this.levelStartTime;
+    this.state.pausedDuration = this.pausedDuration;
+    this.state.version = this.version;
 
     if (wasRunning) {
       this.lastTick = Date.now();
@@ -175,6 +209,8 @@ export class ClockEngine extends EventEmitter {
         // Update server time and drift correction
         this.state.serverTime = now;
         this.state.driftCorrection = this.driftAdjustment;
+        this.state.levelStartTime = this.levelStartTime;
+        this.state.pausedDuration = this.pausedDuration;
 
         // Sync with database if callback provided
         if (this.syncCallback) {
@@ -201,18 +237,27 @@ export class ClockEngine extends EventEmitter {
 
     if (nextLevelIdx >= this.levels.length) {
       // Tournament complete
-      this.state.status = 'COMPLETED';
+      this.version++;
+      this.state.status = 'completed';
+      this.state.version = this.version;
       this.state.completedAt = new Date();
       this.stopTimer();
 
       this.emit('clock:completed', this.getState());
     } else {
       // Move to next level
+      this.levelStartTime = Date.now();
+      this.pausedDuration = 0;
+      this.version++;
+
       this.state.currentLevelIdx = nextLevelIdx;
       this.state.currentLevel = this.levels[nextLevelIdx];
       this.state.nextLevel = this.levels[nextLevelIdx + 1];
       this.state.elapsedSeconds = 0;
       this.state.remainingSeconds = this.state.currentLevel.durationSeconds;
+      this.state.levelStartTime = this.levelStartTime;
+      this.state.pausedDuration = this.pausedDuration;
+      this.state.version = this.version;
 
       this.emit('clock:levelChanged', this.getState());
     }

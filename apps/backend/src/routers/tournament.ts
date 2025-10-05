@@ -611,6 +611,15 @@ export const tournamentRouter = router({
 
       const { organizationId, tournamentId, payoutStructure } = input;
 
+      // Basic validation: percentages must sum to ~100 and be non-negative
+      const totalPct = payoutStructure.reduce((sum, p) => sum + p.percentage, 0);
+      if (payoutStructure.some(p => p.percentage < 0)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payout percentages cannot be negative' });
+      }
+      if (Math.abs(totalPct - 100) > 0.01) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payout percentages must sum to 100%' });
+      }
+
       // Get total prize pool
       const prizePoolData = await ctx.prisma.transaction.aggregate({
         where: {

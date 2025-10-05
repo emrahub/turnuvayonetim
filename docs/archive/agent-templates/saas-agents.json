@@ -1,0 +1,210 @@
+{
+  "projectType": "saas",
+  "description": "SaaS platform with authentication, subscription management, multi-tenancy, and analytics",
+  "recommendedStack": {
+    "frontend": ["React", "Next.js", "Ant Design/Material-UI"],
+    "backend": ["Node.js", "NestJS", "GraphQL"],
+    "database": ["PostgreSQL", "Redis"],
+    "auth": ["Auth0", "Clerk", "Supabase Auth"],
+    "payments": ["Stripe Billing", "Paddle"],
+    "analytics": ["Mixpanel", "Segment", "PostHog"]
+  },
+  "agents": [
+    {
+      "id": "auth",
+      "name": "Authentication & Authorization Agent",
+      "role": "User authentication, SSO, RBAC, multi-tenancy",
+      "capabilities": [
+        "oauth2",
+        "jwt",
+        "saml",
+        "rbac",
+        "multi-tenancy",
+        "2fa",
+        "session-management",
+        "api-keys"
+      ],
+      "responsibilities": [
+        "Implement authentication system",
+        "Setup SSO integrations",
+        "Design role-based access control",
+        "Implement multi-tenancy isolation",
+        "Create API key management",
+        "Setup 2FA and security features"
+      ],
+      "port": 9001,
+      "vncPort": 7900,
+      "browserConfig": {
+        "profilePath": "./profiles/auth",
+        "headless": false
+      }
+    },
+    {
+      "id": "billing",
+      "name": "Billing & Subscription Agent",
+      "role": "Subscription management, billing, invoicing, usage tracking",
+      "capabilities": [
+        "stripe-billing",
+        "subscription-management",
+        "usage-metering",
+        "invoicing",
+        "dunning",
+        "webhooks",
+        "pricing-tiers"
+      ],
+      "responsibilities": [
+        "Setup subscription tiers and pricing",
+        "Integrate Stripe Billing",
+        "Implement usage-based billing",
+        "Create customer portal",
+        "Handle upgrades/downgrades",
+        "Manage payment failures and dunning"
+      ],
+      "port": 9002,
+      "vncPort": 7901,
+      "browserConfig": {
+        "profilePath": "./profiles/billing",
+        "headless": false
+      }
+    },
+    {
+      "id": "api",
+      "name": "API & Integration Agent",
+      "role": "REST/GraphQL APIs, webhooks, third-party integrations",
+      "capabilities": [
+        "rest-api",
+        "graphql",
+        "openapi",
+        "rate-limiting",
+        "api-versioning",
+        "webhooks",
+        "oauth-provider"
+      ],
+      "responsibilities": [
+        "Design and implement APIs",
+        "Create API documentation",
+        "Implement rate limiting",
+        "Setup webhook system",
+        "Build OAuth provider",
+        "Manage API versioning"
+      ],
+      "port": 9003,
+      "vncPort": 7902,
+      "browserConfig": {
+        "profilePath": "./profiles/api",
+        "headless": false
+      }
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics & Reporting Agent",
+      "role": "Metrics collection, dashboards, reporting, monitoring",
+      "capabilities": [
+        "data-aggregation",
+        "visualization",
+        "reporting",
+        "monitoring",
+        "alerting",
+        "export",
+        "custom-metrics"
+      ],
+      "responsibilities": [
+        "Build analytics dashboard",
+        "Implement metrics collection",
+        "Create custom reports",
+        "Setup monitoring and alerting",
+        "Build admin dashboard",
+        "Implement data export features"
+      ],
+      "port": 9004,
+      "vncPort": 7903,
+      "browserConfig": {
+        "profilePath": "./profiles/analytics",
+        "headless": false
+      }
+    }
+  ],
+  "orchestration": {
+    "workflow": "sequential",
+    "stages": [
+      {
+        "name": "foundation",
+        "description": "Setup authentication and database",
+        "agents": ["auth"],
+        "parallel": false,
+        "tasks": [
+          "setup_authentication",
+          "implement_rbac",
+          "create_tenant_isolation"
+        ]
+      },
+      {
+        "name": "core_platform",
+        "description": "Build core SaaS features",
+        "agents": ["api", "billing"],
+        "parallel": true,
+        "tasks": [
+          "create_apis",
+          "setup_subscriptions",
+          "implement_billing"
+        ]
+      },
+      {
+        "name": "analytics",
+        "description": "Add analytics and monitoring",
+        "agents": ["analytics"],
+        "parallel": false,
+        "tasks": [
+          "setup_metrics",
+          "create_dashboards",
+          "implement_reporting"
+        ]
+      }
+    ],
+    "maxConcurrency": 4,
+    "taskTimeout": 120000,
+    "retryAttempts": 3
+  },
+  "dockerServices": {
+    "postgres": {
+      "image": "postgres:15-alpine",
+      "port": 5432,
+      "environment": {
+        "POSTGRES_DB": "saas",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "postgres"
+      }
+    },
+    "redis": {
+      "image": "redis:7-alpine",
+      "port": 6379
+    }
+  },
+  "envVariables": {
+    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/saas",
+    "REDIS_URL": "redis://localhost:6379",
+    "AUTH0_DOMAIN": "your-domain.auth0.com",
+    "AUTH0_CLIENT_ID": "...",
+    "AUTH0_CLIENT_SECRET": "...",
+    "STRIPE_SECRET_KEY": "sk_test_...",
+    "STRIPE_WEBHOOK_SECRET": "whsec_...",
+    "JWT_SECRET": "your-jwt-secret",
+    "ENCRYPTION_KEY": "your-encryption-key"
+  },
+  "features": {
+    "multiTenancy": {
+      "strategy": "database-per-tenant|schema-per-tenant|shared-database",
+      "isolation": "row-level-security"
+    },
+    "subscription": {
+      "tiers": ["free", "starter", "pro", "enterprise"],
+      "billing": "monthly|annual",
+      "trial": "14-days"
+    },
+    "api": {
+      "rateLimit": "100-requests-per-minute",
+      "versioning": "url|header",
+      "authentication": "api-key|oauth2"
+    }
+  }
+}

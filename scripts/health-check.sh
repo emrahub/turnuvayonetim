@@ -13,8 +13,8 @@ NC='\033[0m' # No Color
 
 # Configuration
 BACKEND_URL="${BACKEND_URL:-http://localhost:4000}"
-FRONTEND_URL="${FRONTEND_URL:-http://localhost:3000}"
-WS_URL="${WS_URL:-http://localhost:3001}"
+FRONTEND_URL="${FRONTEND_URL:-http://localhost:3005}"
+WS_URL="${WS_URL:-http://localhost:3003}"
 TIMEOUT="${TIMEOUT:-10}"
 
 echo "🏥 Starting health check for Turnuva Yönetim System..."
@@ -138,8 +138,8 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo ""
     echo "Options:"
     echo "  --backend-url URL    Backend API URL (default: http://localhost:4000)"
-    echo "  --frontend-url URL   Frontend URL (default: http://localhost:3000)"
-    echo "  --ws-url URL         WebSocket URL (default: http://localhost:3001)"
+    echo "  --frontend-url URL   Frontend URL (default: http://localhost:3005)"
+    echo "  --ws-url URL         WebSocket URL (default: http://localhost:3003)"
     echo "  --timeout SECONDS    Request timeout (default: 10)"
     echo "  --help, -h           Show this help message"
     echo ""

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3005",
+    "dev": "set PORT=3005 && next dev -p 3005",
+    "dev:force": "set PORT=3005 && next dev -p 3005 --hostname localhost",
     "build": "next build",
-    "start": "next start -p 3005",
+    "start": "set PORT=3005 && next start -p 3005",
     "lint": "next lint"
   },
   "dependencies": {

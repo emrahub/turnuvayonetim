@@ -37,7 +37,7 @@ export function createAuthExpressRouter(
   router.use(securityHeaders());
 
   // Apply CORS for auth routes
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3005'];
   router.use(createCorsMiddleware(allowedOrigins));
 
   // Apply rate limiting

@@ -1,0 +1,232 @@
+{
+  "projectType": "mobile",
+  "description": "Mobile application with native features, offline support, and backend integration",
+  "recommendedStack": {
+    "crossPlatform": ["React Native", "Flutter", "Ionic"],
+    "native": ["Swift/iOS", "Kotlin/Android"],
+    "backend": ["Firebase", "Supabase", "Custom API"],
+    "state": ["Redux", "MobX", "Riverpod"],
+    "database": ["SQLite", "Realm", "WatermelonDB"]
+  },
+  "agents": [
+    {
+      "id": "ui",
+      "name": "Mobile UI/UX Agent",
+      "role": "Screen design, navigation, components, animations",
+      "capabilities": [
+        "react-native",
+        "flutter",
+        "ui-components",
+        "navigation",
+        "animations",
+        "responsive-design",
+        "theming"
+      ],
+      "responsibilities": [
+        "Design app screens and layouts",
+        "Implement navigation structure",
+        "Create reusable components",
+        "Add animations and transitions",
+        "Implement responsive design",
+        "Setup theming and styling"
+      ],
+      "port": 9001,
+      "vncPort": 7900,
+      "browserConfig": {
+        "profilePath": "./profiles/mobile-ui",
+        "headless": false
+      }
+    },
+    {
+      "id": "state",
+      "name": "State & Data Management Agent",
+      "role": "State management, offline sync, local storage, caching",
+      "capabilities": [
+        "redux",
+        "mobx",
+        "sqlite",
+        "realm",
+        "offline-sync",
+        "caching",
+        "data-persistence"
+      ],
+      "responsibilities": [
+        "Setup state management",
+        "Implement offline data storage",
+        "Create sync mechanisms",
+        "Handle data caching",
+        "Manage app state persistence",
+        "Implement conflict resolution"
+      ],
+      "port": 9002,
+      "vncPort": 7901,
+      "browserConfig": {
+        "profilePath": "./profiles/mobile-state",
+        "headless": false
+      }
+    },
+    {
+      "id": "native",
+      "name": "Native Features Agent",
+      "role": "Device APIs, permissions, background tasks, platform-specific features",
+      "capabilities": [
+        "camera",
+        "geolocation",
+        "push-notifications",
+        "biometrics",
+        "sensors",
+        "file-system",
+        "background-tasks"
+      ],
+      "responsibilities": [
+        "Integrate device cameras",
+        "Implement geolocation features",
+        "Setup push notifications",
+        "Add biometric authentication",
+        "Access device sensors",
+        "Handle background tasks"
+      ],
+      "port": 9003,
+      "vncPort": 7902,
+      "browserConfig": {
+        "profilePath": "./profiles/mobile-native",
+        "headless": false
+      }
+    },
+    {
+      "id": "backend",
+      "name": "Mobile Backend Agent",
+      "role": "APIs, authentication, cloud sync, push notifications",
+      "capabilities": [
+        "firebase",
+        "supabase",
+        "rest-api",
+        "graphql",
+        "websocket",
+        "cloud-functions",
+        "push-services"
+      ],
+      "responsibilities": [
+        "Setup backend services",
+        "Implement authentication",
+        "Create API endpoints",
+        "Setup real-time features",
+        "Configure push notifications",
+        "Implement cloud functions"
+      ],
+      "port": 9004,
+      "vncPort": 7903,
+      "browserConfig": {
+        "profilePath": "./profiles/mobile-backend",
+        "headless": false
+      }
+    }
+  ],
+  "orchestration": {
+    "workflow": "hybrid",
+    "stages": [
+      {
+        "name": "setup",
+        "description": "Initialize mobile project and backend",
+        "agents": ["backend"],
+        "parallel": false,
+        "tasks": [
+          "setup_backend_services",
+          "configure_authentication",
+          "create_api_structure"
+        ]
+      },
+      {
+        "name": "app_foundation",
+        "description": "Build core app structure",
+        "agents": ["ui", "state"],
+        "parallel": true,
+        "tasks": [
+          "create_navigation",
+          "setup_state_management",
+          "design_screens"
+        ]
+      },
+      {
+        "name": "features",
+        "description": "Implement app features",
+        "agents": ["native", "ui"],
+        "parallel": true,
+        "tasks": [
+          "integrate_native_features",
+          "implement_ui_components",
+          "add_offline_support"
+        ]
+      },
+      {
+        "name": "integration",
+        "description": "Connect app with backend",
+        "agents": ["backend", "state"],
+        "parallel": false,
+        "tasks": [
+          "connect_apis",
+          "setup_data_sync",
+          "test_integration"
+        ]
+      }
+    ],
+    "maxConcurrency": 4,
+    "taskTimeout": 120000,
+    "retryAttempts": 3
+  },
+  "platformConfig": {
+    "ios": {
+      "minimumVersion": "13.0",
+      "devices": ["iPhone", "iPad"],
+      "capabilities": ["push", "camera", "location"]
+    },
+    "android": {
+      "minimumSdk": 23,
+      "targetSdk": 34,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "RECEIVE_PUSH_NOTIFICATIONS"
+      ]
+    }
+  },
+  "dockerServices": {
+    "postgres": {
+      "image": "postgres:15-alpine",
+      "port": 5432,
+      "required": false
+    },
+    "redis": {
+      "image": "redis:7-alpine",
+      "port": 6379,
+      "required": false
+    }
+  },
+  "envVariables": {
+    "FIREBASE_API_KEY": "...",
+    "FIREBASE_AUTH_DOMAIN": "...",
+    "FIREBASE_PROJECT_ID": "...",
+    "SUPABASE_URL": "https://xxx.supabase.co",
+    "SUPABASE_ANON_KEY": "...",
+    "API_BASE_URL": "https://api.yourapp.com",
+    "SENTRY_DSN": "...",
+    "MIXPANEL_TOKEN": "..."
+  },
+  "buildConfig": {
+    "development": {
+      "hot_reload": true,
+      "debug_mode": true,
+      "source_maps": true
+    },
+    "staging": {
+      "minify": true,
+      "bundle_splitting": true,
+      "error_tracking": true
+    },
+    "production": {
+      "minify": true,
+      "obfuscation": true,
+      "code_signing": true
+    }
+  }
+}

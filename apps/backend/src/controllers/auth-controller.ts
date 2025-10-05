@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import {
+import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
@@ -16,10 +16,9 @@ import {
   TwoFactorSetupResponse,
   TwoFactorVerifyRequest,
   TwoFactorDisableRequest,
-  AuthErrorCode,
-  SecurityEventType,
   UserInfo
 } from '../types/auth-types';
+import { AuthErrorCode, SecurityEventType } from '../types/auth-types';
 import { AuthService } from '../services/auth-service';
 import { EventStore } from '../services/event-store';
 import {
@@ -139,7 +138,7 @@ export class AuthController {
         return;
       }
 
-      const clientInfo = this.getClientInfo(req);
+      const _clientInfo = this.getClientInfo(req);
       const response = await this.authService.register(validatedData);
 
       // Set refresh token as HTTP-only cookie
@@ -345,10 +344,11 @@ export class AuthController {
           firstName: true,
           lastName: true,
           avatarUrl: true,
-          role: true,
+          // role: true, // Not in current schema
           isActive: true,
-          emailVerified: true,
-          lastLoginAt: true
+          // emailVerified: true, // Not in current schema
+          // lastLoginAt: true // Not in current schema
+          UserOrganization: true
         }
       });
 
@@ -438,7 +438,8 @@ export class AuthController {
 
       // Find user
       const user = await this.prisma.user.findUnique({
-        where: { email: validatedData.email }
+        where: { email: validatedData.email },
+        include: { UserOrganization: true }
       });
 
       // Always return success to prevent email enumeration
@@ -453,7 +454,7 @@ export class AuthController {
       }
 
       // Generate reset token
-      const { token, expiresAt } = generatePasswordResetToken(user.id);
+      const { token } = generatePasswordResetToken(user.id);
 
       // Store reset token (simplified - in production, store in database)
       await this.prisma.user.update({
@@ -467,7 +468,7 @@ export class AuthController {
       await this.logSecurityEvent({
         type: SecurityEventType.PASSWORD_RESET_REQUESTED,
         userId: user.id,
-        organizationId: user.organizationId,
+        organizationId: user.UserOrganization[0]?.organizationId || '',
         details: { email: validatedData.email }
       });
 
@@ -532,7 +533,7 @@ export class AuthController {
 
   verifyEmail = async (req: Request, res: Response): Promise<void> => {
     try {
-      const validatedData = verifyEmailSchema.parse(req.body);
+      const _validatedData = verifyEmailSchema.parse(req.body);
 
       // This would be implemented in the auth service
       // await this.authService.verifyEmail(validatedData.token);
@@ -592,10 +593,10 @@ export class AuthController {
         return;
       }
 
-      const validatedData = twoFactorSetupSchema.parse(req.body);
+      const _validatedData = twoFactorSetupSchema.parse(req.body);
 
       // This would be implemented in the auth service
-      // const response = await this.authService.setupTwoFactor(req.user.id, validatedData.password);
+      // const response = await this.authService.setupTwoFactor(req.user.id, _validatedData.password);
 
       const response: TwoFactorSetupResponse = {
         secret: 'MOCK_SECRET',
@@ -620,10 +621,10 @@ export class AuthController {
         return;
       }
 
-      const validatedData = twoFactorVerifySchema.parse(req.body);
+      const _validatedData = twoFactorVerifySchema.parse(req.body);
 
       // This would be implemented in the auth service
-      // await this.authService.verifyTwoFactorSetup(req.user.id, validatedData);
+      // await this.authService.verifyTwoFactorSetup(req.user.id, _validatedData);
 
       await this.logSecurityEvent({
         type: SecurityEventType.TWO_FACTOR_ENABLED,
@@ -652,10 +653,10 @@ export class AuthController {
         return;
       }
 
-      const validatedData = twoFactorDisableSchema.parse(req.body);
+      const _validatedData = twoFactorDisableSchema.parse(req.body);
 
       // This would be implemented in the auth service
-      // await this.authService.disableTwoFactor(req.user.id, validatedData);
+      // await this.authService.disableTwoFactor(req.user.id, _validatedData);
 
       await this.logSecurityEvent({
         type: SecurityEventType.TWO_FACTOR_DISABLED,

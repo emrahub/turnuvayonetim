@@ -1,0 +1,211 @@
+{
+  "projectType": "ecommerce",
+  "description": "E-Commerce platform with product catalog, shopping cart, payment processing, and order management",
+  "recommendedStack": {
+    "frontend": ["React", "Next.js", "Tailwind CSS"],
+    "backend": ["Node.js", "Express/NestJS", "GraphQL/REST"],
+    "database": ["PostgreSQL", "Redis"],
+    "payment": ["Stripe", "PayPal"],
+    "search": ["Elasticsearch", "Algolia"]
+  },
+  "agents": [
+    {
+      "id": "catalog",
+      "name": "Product Catalog Agent",
+      "role": "Product management, inventory tracking, category management, search functionality",
+      "capabilities": [
+        "crud-operations",
+        "database-design",
+        "search-implementation",
+        "filtering-sorting",
+        "inventory-management",
+        "product-variants",
+        "pricing-rules"
+      ],
+      "responsibilities": [
+        "Design product database schema",
+        "Implement product CRUD APIs",
+        "Create search and filter functionality",
+        "Manage product categories and tags",
+        "Handle inventory tracking",
+        "Implement product recommendations"
+      ],
+      "port": 9001,
+      "vncPort": 7900,
+      "browserConfig": {
+        "profilePath": "./profiles/catalog",
+        "headless": false
+      }
+    },
+    {
+      "id": "cart",
+      "name": "Shopping Cart Agent",
+      "role": "Cart management, session handling, price calculations, promotions",
+      "capabilities": [
+        "state-management",
+        "session-handling",
+        "calculations",
+        "validation",
+        "promotions",
+        "coupons",
+        "cart-persistence"
+      ],
+      "responsibilities": [
+        "Implement cart state management",
+        "Handle cart persistence (session/database)",
+        "Calculate totals, taxes, discounts",
+        "Validate cart items and quantities",
+        "Apply promotional rules",
+        "Manage wishlist functionality"
+      ],
+      "port": 9002,
+      "vncPort": 7901,
+      "browserConfig": {
+        "profilePath": "./profiles/cart",
+        "headless": false
+      }
+    },
+    {
+      "id": "payment",
+      "name": "Payment Processing Agent",
+      "role": "Payment gateway integration, transaction handling, security compliance",
+      "capabilities": [
+        "stripe-integration",
+        "paypal-integration",
+        "payment-processing",
+        "pci-compliance",
+        "encryption",
+        "webhook-handling",
+        "refunds"
+      ],
+      "responsibilities": [
+        "Integrate payment gateways",
+        "Handle payment processing",
+        "Implement secure payment flow",
+        "Manage webhooks for payment events",
+        "Handle refunds and disputes",
+        "Implement subscription billing if needed"
+      ],
+      "port": 9003,
+      "vncPort": 7902,
+      "browserConfig": {
+        "profilePath": "./profiles/payment",
+        "headless": false
+      }
+    },
+    {
+      "id": "fulfillment",
+      "name": "Order Fulfillment Agent",
+      "role": "Order processing, shipping integration, tracking, notifications",
+      "capabilities": [
+        "order-management",
+        "workflow-automation",
+        "shipping-integration",
+        "tracking",
+        "notifications",
+        "email-templates",
+        "reporting"
+      ],
+      "responsibilities": [
+        "Manage order lifecycle",
+        "Integrate shipping providers",
+        "Generate shipping labels",
+        "Send order notifications",
+        "Handle returns and exchanges",
+        "Generate order reports and analytics"
+      ],
+      "port": 9004,
+      "vncPort": 7903,
+      "browserConfig": {
+        "profilePath": "./profiles/fulfillment",
+        "headless": false
+      }
+    }
+  ],
+  "orchestration": {
+    "workflow": "hybrid",
+    "stages": [
+      {
+        "name": "infrastructure",
+        "description": "Setup database, caching, and base architecture",
+        "agents": ["catalog"],
+        "parallel": false,
+        "tasks": [
+          "setup_database_schema",
+          "configure_redis_caching",
+          "create_api_structure"
+        ]
+      },
+      {
+        "name": "core_features",
+        "description": "Develop core e-commerce features",
+        "agents": ["catalog", "cart"],
+        "parallel": true,
+        "tasks": [
+          "product_management",
+          "cart_functionality",
+          "user_authentication"
+        ]
+      },
+      {
+        "name": "payment_integration",
+        "description": "Integrate payment systems",
+        "agents": ["payment"],
+        "parallel": false,
+        "tasks": [
+          "payment_gateway_setup",
+          "checkout_flow",
+          "payment_security"
+        ]
+      },
+      {
+        "name": "order_management",
+        "description": "Implement order processing",
+        "agents": ["fulfillment"],
+        "parallel": false,
+        "tasks": [
+          "order_workflow",
+          "shipping_integration",
+          "notifications"
+        ]
+      }
+    ],
+    "maxConcurrency": 4,
+    "taskTimeout": 120000,
+    "retryAttempts": 3
+  },
+  "dockerServices": {
+    "postgres": {
+      "image": "postgres:15-alpine",
+      "port": 5432,
+      "environment": {
+        "POSTGRES_DB": "ecommerce",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "postgres"
+      }
+    },
+    "redis": {
+      "image": "redis:7-alpine",
+      "port": 6379
+    },
+    "elasticsearch": {
+      "image": "elasticsearch:8.11.0",
+      "port": 9200,
+      "environment": {
+        "discovery.type": "single-node",
+        "ES_JAVA_OPTS": "-Xms512m -Xmx512m"
+      }
+    }
+  },
+  "envVariables": {
+    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/ecommerce",
+    "REDIS_URL": "redis://localhost:6379",
+    "ELASTICSEARCH_URL": "http://localhost:9200",
+    "STRIPE_SECRET_KEY": "sk_test_...",
+    "STRIPE_WEBHOOK_SECRET": "whsec_...",
+    "PAYPAL_CLIENT_ID": "...",
+    "PAYPAL_CLIENT_SECRET": "...",
+    "JWT_SECRET": "your-jwt-secret",
+    "SESSION_SECRET": "your-session-secret"
+  }
+}

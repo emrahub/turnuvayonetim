@@ -4,9 +4,10 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "set API_PORT=4000 && tsx watch src/index.ts",
+    "dev:force": "set API_PORT=4000 && set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tournament && tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "set API_PORT=4000 && node dist/index.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

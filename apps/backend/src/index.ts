@@ -17,7 +17,7 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.API_PORT || 4000;
-const WS_PORT = process.env.WS_PORT || 3001;
+const WS_PORT = process.env.WS_PORT || 3003;
 
 // Initialize services
 const prisma = new PrismaClient();
@@ -37,7 +37,7 @@ const clockService = new ClockService(prisma, eventStore);
 // Setup Socket.IO server
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
     credentials: true,
     methods: ['GET', 'POST']
   },
@@ -50,7 +50,7 @@ const clockController = new ClockController(io, prisma, eventStore, clockService
 
 // Middleware
 app.use(cors({
-  origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
   credentials: true
 }));
 app.use(express.json());

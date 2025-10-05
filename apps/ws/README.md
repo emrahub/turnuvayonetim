@@ -80,7 +80,7 @@ Create a `.env` file (use `.env.example` as template):
 
 ```bash
 # WebSocket Server Configuration
-WS_PORT=3001
+WS_PORT=3003
 NODE_ENV=development
 
 # Database
@@ -90,7 +90,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/turnuva"
 JWT_SECRET="your-secret-key-here"
 
 # Frontend URL for CORS
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3005"
 
 # Redis Configuration (optional for scaling)
 REDIS_URL="redis://localhost:6379"
@@ -126,7 +126,7 @@ npm run test:connection
 The server uses JWT authentication middleware. Clients must provide a valid JWT token in the connection handshake:
 
 ```javascript
-const socket = io('ws://localhost:3001', {
+const socket = io('ws://localhost:3003', {
   auth: {
     token: 'your-jwt-token'
   }

@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 /**
  * Checks if a user role has access to perform operations that require any of the allowed roles.
@@ -8,7 +8,7 @@ import { UserRole } from '@prisma/client';
  * @param allowedRoles - Array of role strings that are allowed for the operation
  * @returns boolean - true if the user role is included in the allowed roles
  */
-export function hasRole(userRole: UserRole, allowedRoles: string[]): boolean {
+export function hasRole(userRole: Role, allowedRoles: string[]): boolean {
   return allowedRoles.includes(userRole);
 }
 
@@ -20,7 +20,7 @@ export function hasRole(userRole: UserRole, allowedRoles: string[]): boolean {
  * @returns Function that can be used in TRPC middleware
  */
 export function requireRole(allowedRoles: string[]) {
-  return (userRole: UserRole) => {
+  return (userRole: Role) => {
     return hasRole(userRole, allowedRoles);
   };
 }
@@ -28,23 +28,23 @@ export function requireRole(allowedRoles: string[]) {
 // Common role permission sets for different operation types
 export const ROLE_PERMISSIONS = {
   // Full administrative access
-  ADMIN_ONLY: [UserRole.ADMIN] as string[],
+  ADMIN_ONLY: [Role.ADMIN] as string[],
 
   // Management and administrative access
-  MANAGEMENT: [UserRole.ADMIN, UserRole.MANAGER] as string[],
+  MANAGEMENT: [Role.ADMIN, Role.DIRECTOR] as string[],
 
-  // Staff operations (includes MANAGER and DEALER for most operations)
-  STAFF_OPERATIONS: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DEALER] as string[],
+  // Staff operations (includes DIRECTOR and STAFF for most operations)
+  STAFF_OPERATIONS: [Role.ADMIN, Role.DIRECTOR, Role.STAFF] as string[],
 
   // Read-only operations (all roles can view)
-  READ_ONLY: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DEALER, UserRole.PLAYER, UserRole.VIEWER] as string[],
+  READ_ONLY: [Role.OWNER, Role.ADMIN, Role.DIRECTOR, Role.STAFF, Role.DISPLAY] as string[],
 
-  // Tournament operations (includes MANAGER for tournament management)
-  TOURNAMENT_OPERATIONS: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DEALER] as string[],
+  // Tournament operations (includes DIRECTOR for tournament management)
+  TOURNAMENT_OPERATIONS: [Role.ADMIN, Role.DIRECTOR, Role.STAFF] as string[],
 
-  // Player management (includes MANAGER and DEALER)
-  PLAYER_MANAGEMENT: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DEALER] as string[],
+  // Player management (includes DIRECTOR and STAFF)
+  PLAYER_MANAGEMENT: [Role.ADMIN, Role.DIRECTOR, Role.STAFF] as string[],
 
-  // Table management (includes DEALER for table operations)
-  TABLE_MANAGEMENT: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DEALER] as string[]
+  // Table management (includes STAFF for table operations)
+  TABLE_MANAGEMENT: [Role.ADMIN, Role.DIRECTOR, Role.STAFF] as string[]
 };

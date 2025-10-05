@@ -634,23 +634,4 @@ export function calculatePlayerTournamentStats(events: BaseEvent[], playerId: st
 
 // Export all types
 export type PlayerEvent = BaseEvent;
-export {
-  PlayerProfileCreatedData,
-  PlayerProfileUpdatedData,
-  PlayerRegisteredForTournamentData,
-  PlayerEntryConfirmedData,
-  PlayerSeatedData,
-  PlayerMovedTablesData,
-  PlayerChipsUpdatedData,
-  PlayerReboughtData,
-  PlayerAddonPurchasedData,
-  PlayerEliminatedData,
-  PlayerDisqualifiedData,
-  PlayerStatisticsUpdatedData,
-  PlayerTournamentFinishedData,
-  PlayerPayoutEarnedData,
-  PlayerPayoutReceivedData,
-  PlayerWarningIssuedData,
-  PlayerPenaltyAppliedData,
-  PlayerStatusChangedData
-};
+// Note: All data types are already exported via their interface declarations above

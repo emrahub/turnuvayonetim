@@ -119,11 +119,4 @@ export {
   createEventSystem
 } from '../services/event-system';
 
-// Re-export types for convenience
-export type {
-  BaseEvent,
-  EventStoreConfig,
-  EventBroadcasterConfig,
-  EventIntegrationConfig,
-  EventSystemConfig
-} from '../services/event-store';
+// Note: All types are already exported via their respective service modules above

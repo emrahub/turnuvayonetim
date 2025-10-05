@@ -543,13 +543,4 @@ export function isPasswordBreached(password: string, breachResponse: string): bo
 // ================================================================
 // EXPORTS
 // ================================================================
-
-
-export type {
-  PasswordPolicy,
-  PasswordValidationResult,
-  HashOptions,
-  ResetTokenOptions,
-  LockoutState,
-  LockoutPolicy
-};
+// All types are already exported via their declarations above
